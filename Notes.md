@@ -10,10 +10,9 @@ import numpy as np
 
 import dendropy
 
-
+"""
 def simulate_barrier_phylogeny(num_species=10, divergence_time=5.0, barrier_effect=0.5):
-    """
-    Simulates a phylogenetic tree with species divergence influenced by geographic barriers.
+**Simulates a phylogenetic tree with species divergence influenced by geographic barriers.**
     
     Parameters:
         num_species (int): Number of species to simulate.
