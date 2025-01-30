@@ -10,18 +10,19 @@ import numpy as np
 
 import dendropy
 
-"""
-def simulate_barrier_phylogeny(num_species=10, divergence_time=5.0, barrier_effect=0.5):
-**Simulates a phylogenetic tree with species divergence influenced by geographic barriers.**
+
+    def simulate_barrier_phylogeny(num_species=10, divergence_time=5.0, barrier_effect=0.5)
     
-    Parameters:
+**Simulates a phylogenetic tree with species divergence influenced by geographic barriers.
+    
+Parameters:
         num_species (int): Number of species to simulate.
         divergence_time (float): Time when the barrier appears, leading to divergence.
         barrier_effect (float): Probability of divergence when encountering a barrier.
     
-    Returns:
-        DendroPy Tree object.
-    """
+Returns:
+        DendroPy Tree object.**
+
     tree = dendropy.Tree()  # Create an empty tree
     root = tree.seed_node  # Root node
     
