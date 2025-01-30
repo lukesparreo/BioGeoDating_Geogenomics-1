@@ -7,7 +7,9 @@ This can reflect tectonic shifts, sea level changes, or climate events.
 # Function to simulate a phylogenetic tree with divergence events due to barriers with DendroPy
 
 import numpy as np
+
 import dendropy
+
 
 def simulate_barrier_phylogeny(num_species=10, divergence_time=5.0, barrier_effect=0.5):
     """
