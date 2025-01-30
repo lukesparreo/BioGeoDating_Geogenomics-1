@@ -1,16 +1,14 @@
-#Some notes
+# Some notes
 
 A. Time-Dependent Birth-Death Models
 You can modify speciation (λ) and extinction (μ) rates over geological time.
 This can reflect tectonic shifts, sea level changes, or climate events.
-Tools:
-##R: TreeSim, TESS
-##Python: DendroPy
+
+# Function to simulate a phylogenetic tree with divergence events due to barriers with DendroPy
 
 import numpy as np
 import dendropy
 
-# Function to simulate a phylogenetic tree with divergence events due to barriers
 def simulate_barrier_phylogeny(num_species=10, divergence_time=5.0, barrier_effect=0.5):
     """
     Simulates a phylogenetic tree with species divergence influenced by geographic barriers.
