@@ -1,3 +1,4 @@
+### General setup ###
 conda activate msprime-env
 
 python
@@ -7,6 +8,7 @@ import msprime
 import demesdraw
 import matplotlib.pyplot as plt
 
+### Preferred method (coalescence) ###
 #set conditions for mock data, with split occuring 3mya
 N_ancestral = 100
 N_population = 50
@@ -55,5 +57,28 @@ print(tree)  # Save this to a .nwk file for R visualization
 #code in r: library(ape)
 #tree<-ape::read.tree(text= "add_newick_here")
 #plot(tree)
+
+### Additional method ### working on still, something is not right here
+import numpy as np
+import dendropy
+
+#create simulation with specifications
+def simulate_barrier_phylogeny(num_species=3, divergence_time=3000000, barrier_effect=1):
+   tree = dendropy.Tree()
+   root = tree.seed_node
+   for i in range(num_species):
+      new_node = root.new_child(taxon=dendropy.Taxon(label=f"Species_{i+1}"))
+      for node in tree.leaf_nodes():
+        if np.random.rand() < barrier_effect:
+          new_child = node.new_child(taxon=dendropy.Taxon(label=f"{node.taxon.label}_Diverged"))
+          new_child.edge.length = divergence_time
+      return tree
+
+#simulate tree
+simulated_tree = simulate_barrier_phylogeny(num_species=10, divergence_time=5.0, barrier_effect=0.7)
+
+#view tree after converting to Newick
+tree_newick = simulated_tree.as_string(schema="newick")
+print(tree_newick)
 
 
