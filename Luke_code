@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 ### Preferred method (coalescence) ###
 #set conditions for mock data, with split occuring 3mya
-N_ancestral = 100
+N_ancestral = 100 #after 100,000 is when it starts getting computationally challenging
 N_population = 50
 T_divergence = 3000000 
 migration_rate = 0.01
