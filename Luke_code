@@ -30,7 +30,7 @@ demography.set_migration_rate(source="pop2", dest="pop1", rate=migration_rate)
 demography.add_migration_rate_change(time=T_divergence, rate=0)
 
 #tree sequence, with recombination occuring at angiosperm levels and about 1 million base pairs
-ts = msprime.sim_ancestry(samples={"pop1": 10, "pop2": 10}, demography=demography, sequence_length=1e6, recombination_rate=1e-8)
+ts = msprime.sim_ancestry(samples={"pop1": 50, "pop2": 50}, demography=demography, sequence_length=1e6, recombination_rate=1e-8)
 
 #drawing demographic model
 fig, ax = plt.subplots(figsize=(6,4))
@@ -58,27 +58,26 @@ print(tree)  # Save this to a .nwk file for R visualization
 #tree<-ape::read.tree(text= "add_newick_here")
 #plot(tree)
 
-### Additional method ### working on still, something is not right here
+### Additional method ### working on still, the tree has no branch lenghts?
 import numpy as np
 import dendropy
 
 #create simulation with specifications
-def simulate_barrier_phylogeny(num_species=3, divergence_time=3000000, barrier_effect=1):
+def simulate_barrier_phylogeny(num_species=30, divergence_time=3000000, barrier_effect=0.5):
    tree = dendropy.Tree()
    root = tree.seed_node
    for i in range(num_species):
       new_node = root.new_child(taxon=dendropy.Taxon(label=f"Species_{i+1}"))
-      for node in tree.leaf_nodes():
-        if np.random.rand() < barrier_effect:
-          new_child = node.new_child(taxon=dendropy.Taxon(label=f"{node.taxon.label}_Diverged"))
-          new_child.edge.length = divergence_time
-      return tree
+   for node in tree.leaf_nodes():
+      if np.random.rand() < barrier_effect:
+         new_child = node.new_child(taxon=dendropy.Taxon(label=f"{node.taxon.label}_Diverged"))
+         new_child.edge.length = divergence_time
+   return tree
 
 #simulate tree
-simulated_tree = simulate_barrier_phylogeny(num_species=10, divergence_time=5.0, barrier_effect=0.7)
+simulated_tree = simulate_barrier_phylogeny(num_species=30, divergence_time=3000000, barrier_effect=0.7)
 
 #view tree after converting to Newick
 tree_newick = simulated_tree.as_string(schema="newick")
 print(tree_newick)
-
 
