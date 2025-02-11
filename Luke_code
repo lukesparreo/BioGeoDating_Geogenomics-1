@@ -1,8 +1,55 @@
-### General setup ###
-conda activate msprime-env
+###create ABC tree with 1mya split and 3mya split as a newick file
+###use this tree to create a "fake" biogeography divergence analysis
 
-python
+###current code
+import msprime
 
+# Define demographic model with populations and their splits
+demography = msprime.Demography()
+demography.add_population(name="Ancestral", initial_size=20000)
+demography.add_population(name="Pop1", initial_size=10000)
+demography.add_population(name="Pop2", initial_size=5000)
+demography.add_population(name="Pop3", initial_size=8000)
+
+# Define multiple split events
+demography.add_population_split(time=5000, derived=["Pop1", "Pop2"], ancestral="Ancestral")
+demography.add_population_split(time=3000, derived=["Pop3"], ancestral="Pop2")
+
+# Function to reconstruct a population tree from msprime.Demography
+def demography_to_newick(demography):
+    """
+    Convert an msprime demographic model into a Newick tree of populations.
+    """
+    # Dictionary to track relationships
+    pop_tree = {pop.name: pop.name for pop in demography.populations}  
+
+    # Get split events (sorted from oldest to most recent)
+    split_events = []
+    for event in demography.events:
+        if isinstance(event, msprime.DemographyEvent):  # Catching split events
+            if hasattr(event, "derived") and hasattr(event, "ancestral") and hasattr(event, "time"):
+                split_events.append((event.derived, event.ancestral, event.time))
+
+    # Sort splits by time (oldest first)
+    split_events.sort(key=lambda x: x[2])
+
+    # Build the Newick tree
+    for derived, ancestral, time in split_events:
+        if isinstance(derived, list):  # Multiple derived populations
+            subtree = "(" + ",".join(f"{pop_tree[pop]}:{time}" for pop in derived) + f")"
+        else:  # Single population split
+            subtree = f"({pop_tree[derived]}:{time})"
+        pop_tree[ancestral] = subtree  # Replace ancestral with updated subtree
+
+    # Return the final tree structure
+    return pop_tree["Ancestral"] + ";"
+
+# Convert to Newick format
+pop_newick_tree = demography_to_newick(demography)
+print(pop_newick_tree)
+
+
+###older code
 #importing packages
 import msprime
 import demesdraw
@@ -26,6 +73,17 @@ demography.add_population_split(time=1000000, derived=["A", "B"], ancestral="AB"
 demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="ABC")
 demography
 
+# Define a demographic model with populations and a split history
+#demography = msprime.Demography()
+#demography.add_population(name="Ancestral", initial_size=100)
+#demography.add_population(name="Pop1", initial_size=100)
+#demography.add_population(name="Pop2", initial_size=100)
+
+# Define the population split event
+#demography.add_population_split(time=1000000, derived=["Pop1"], ancestral="Pop2")
+#demography.add_population_split(time=3000000, derived=["Pop1", "Pop2"], ancestral="Ancestral")
+#set conditions for mock data, with split occuring 3mya
+
 #define rate of migration before barrier and set migration after split to 0
 #demography.set_migration_rate(source="A", dest="B", rate=migration_rate)
 #demography.set_migration_rate(source="B", dest="A", rate=migration_rate)
@@ -46,6 +104,7 @@ tree = ts.first()
 newick_tree = tree.newick()
 print(newick_tree)
 
+####other stuff
 #next we want to visualize the divergence times, and we will use the package numpy
 import numpy as np
 
@@ -67,7 +126,7 @@ print(tree.draw(format="unicode")  # Save this to a .nwk file for R visualizatio
 #plot(tree)
 
 
-### Additional method ### working on still, the tree has no branch lenghts?
+###additional method #working on still, the tree has no branch lenghts?
 import numpy as np
 import dendropy
 
@@ -90,3 +149,6 @@ simulated_tree = simulate_barrier_phylogeny(num_species=30, divergence_time=3000
 tree_newick = simulated_tree.as_string(schema="newick")
 print(tree_newick)
 
+###general setup
+conda activate msprime-env
+python
