@@ -1,7 +1,8 @@
-###create ABC tree with 1mya split and 3mya split as a newick file
-###use this tree to create a "fake" biogeography divergence analysis
-
-###working on method to make species tree instead of population tree
+###working method that makes both species and population level trees
+#create ABC tree with 1mya split and 3mya split as a newick file, we will use this tree to create a "fake" biogeography divergence analysis
+#general setup
+#conda activate msprime-env
+#python
 import msprime
 import tskit
 import matplotlib.pyplot as plt
@@ -63,25 +64,34 @@ print("Population MRCAs:", pop_mrcas)
 divergence_times = {pop: ts.node(mrca).time for pop, mrca in pop_mrcas.items()}
 print("Divergence times:", divergence_times)
 
-# Get subtree starting from MRCA of ABC
-collapsed_newick = tree.as_newick(root=pop_mrcas["ABC"])
+# Get population-level Newick tree
+pop_newick = tree.as_newick(root=pop_mrcas["ABC"])
+print("Population-Level Newick Tree:", pop_newick)
 
-print("Collapsed Newick Tree:", collapsed_newick)
+# Simplify the tree sequence to retain only species-level structure
+simplified_ts = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
+
+# Get the first tree from the simplified tree sequence
+collapsed_tree = simplified_ts.first()
+
+# Convert to Newick format
+collapsed_newick = collapsed_tree.as_newick()
+print("Species-Level Newick Tree:", collapsed_newick)
 
 # Draw demographic model
 fig, ax = plt.subplots(figsize=(6, 4))
 demesdraw.tubes(demography.to_demes(), ax=ax)
 plt.show()
 
+###
 
-###working method
+
+###older version of this method that only creates population tree
 #importing packages
 import msprime
 import matplotlib.pyplot as plt
 import demesdraw
 import numpy as np
-
-### Preferred method (coalescence) ###
 
 #define the changes to demographic size from event
 demography = msprime.Demography()
@@ -211,7 +221,3 @@ simulated_tree = simulate_barrier_phylogeny(num_species=30, divergence_time=3000
 #view tree after converting to Newick
 tree_newick = simulated_tree.as_string(schema="newick")
 print(tree_newick)
-
-###general setup
-conda activate msprime-env
-python
