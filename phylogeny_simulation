@@ -23,7 +23,7 @@ ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10},
                           demography=demography, 
                           sequence_length=1e6, 
                           recombination_rate=1e-8)
-ts = msprime.sim_mutations(ts, rate=1e-8, model="jc69")  # Add genetic mutations
+ts = msprime.sim_mutations(ts, rate=1e-8, model="GTR")  # Add genetic mutations
 
 # Function to get MRCA for each population
 def get_population_mrca(ts, pop_name):
