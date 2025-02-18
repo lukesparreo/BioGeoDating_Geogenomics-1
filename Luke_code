@@ -1,4 +1,4 @@
-###working method that makes both species and population level trees
+###PHYLOGENY SIMULATION python
 #create ABC tree with 1mya split and 3mya split as a newick file, we will use this tree to create a "fake" biogeography divergence analysis
 #general setup
 #conda activate msprime-env
@@ -20,14 +20,14 @@ demography.add_population_split(time=3_000_000, derived=["AB", "C"], ancestral="
 # Simulate tree sequence
 ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10}, 
                           demography=demography, 
-                          sequence_length=1e6, 
-                          recombination_rate=1e-8)
+                          sequence_length=10000, #may want to change to 1e6 if computationally feasible
+                          recombination_rate=4.8e-8)
 
-# Define the mutation rate
+# Define the mutation rate for the lineages, we want to use the GTR model, which is not part of msprime, so we will use tskit and have to define our rate matrix
 mutation_rate = 1e-8
 
 # Define the GTR model parameters (relative rates and equilibrium frequencies)
-relative_rates = [1.0, 1.5, 2.0, 1.5, 2.5, 3.0]  # 6 relative rates for A→C, A→G, A→T, C→G, C→T, G→T
+relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  # 6 relative rates for A→C, A→G, A→T, C→G, C→T, G→T from https://watermark.silverchair.com/mbev_17_08_1146.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAA2YwggNiBgkqhkiG9w0BBwagggNTMIIDTwIBADCCA0gGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM4nEJW1pwB3JV3-7IAgEQgIIDGcLr7PCh6yZjzPiZIRe9tqh8K77C4w5w6MFYyQfffC3M4LPnHWVV9wYOjTL3ODEatp-67LEEmX824qaOUd2JqMYDkZYV_IPp3CVxVldDB48phSVPyezmFPtSxGw3n-T5Nzof3ZGgH-lkxpPzZIz0Uz90THVFrSoI-Gcf27ogTNXKxpjIfv1zKaCcqzA3JhW6noS8OXcDKpgibBlhdU1RM2yRnVNQ1I8MYjze-STOwWJw5lb3zPuUSuzoAyckke3FyBfT7Nps-rdZB7zp6XPnR7ydEr1M8DSgGF5tGlGlBHk5NlTgAV0dUV9JvE2t4DOuLj6MnLBCRcRdnOiu1WzI0EwxU1iJcXrmTw6FyjEq-5Pz6_oQBvn0Xfcu0ZWtrprwPnML_J3vsgem525JC1wZO_g4Jhh-kw3_pVZXoNS1W4mxiaUci8fFw7wxtKhZikmSCteEEEAIQucs60y8emVrq_kdwxbXMPAFYlehjjCuGHh5im9uOBfGC8peVP8yIrb410__Sl44BQk8GLcDaZ94GVYHNw8ockhydrSzk01nWRV1oBgpxnd2_Bv2aHNzSQ2EHXoGcc-UjXVjnQQUrvrogw_eXx3QPwWLB0s20KgHJg-LkNnlMW7IBMyr5HYRjNGHA0eGC-ZrVbw6H37fIL6lBbleSbGdxnhIDBa3m7NE7FrBxz6DXW4780KcTNHLDMIeVc58wB7dlKPCb3Skl5zK9qzBx-P79lLxZvx02gAO5YIkCUtuSsvlMAQcQ1z1B8IunuBusvn60Ol4RDGR9TeUpqDW6RFrhg4UlXkWVtmWFrQI49cL4j59y4-pp9zNzM0qeZKajgY9WuXUa94-3xq2BoYeS7wHKwn0VuazG9Tl84WFeJcocGc78PyUHG7_VGV34t7V8z-p0cKgFlkWMbkzb9Z1Ly0_CCHDHHFvxUDGQFmoifaglVu-3YUCduuyNGuBZyP9kr6RnT83JUVgvq4LHvgZJz3nkmSkF2COeX-YBGOPpKRDQlcYdNJmOdsA45j9eQ8_xEFGQs75kvvCxVy4RYhpcWsUfAODQ7w
 equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  # Equal base frequencies (A, C, G, T)
 
 # Apply GTR mutations using msprime.sim_mutations
@@ -89,148 +89,49 @@ collapsed_tree = simplified_ts.first()
 # Convert to Newick format
 collapsed_newick = collapsed_tree.as_newick()
 print("Species-Level Newick Tree:", collapsed_newick)
+with open("collapsed_newick.tre", "w") as f:
+  f.write(collapsed_newick)
 
 # Draw demographic model
 fig, ax = plt.subplots(figsize=(6, 4))
 demesdraw.tubes(demography.to_demes(), ax=ax)
 plt.show()
 
+#to leave msprime environment use conda deactivate
 
+###create CONNECTIVITY MATRICES for 3 epochs
+###create DISTANCE MATRIX
+###create TIMES MATRIX defining when barriers appeared
 ###
 
+###MOLECULAR SIMULATION revbayes
+#general setup
+#conda activate revbayesenv
+#rb
+#leave rb with quit()
 
-###older version of this method that only creates population tree
-#importing packages
-import msprime
-import matplotlib.pyplot as plt
-import demesdraw
-import numpy as np
+#read the msprime simulated tree
+tree_fn = readTrees("collapsed_newick.tre")[1]
+print(tree_fn)
 
-#define the changes to demographic size from event
-demography = msprime.Demography()
-demography.add_population(name="A", initial_size=50)
-demography.add_population(name="B", initial_size=50)
-demography.add_population(name="C", initial_size=100)
-demography.add_population(name="AB", initial_size=100)
-demography.add_population(name="ABC", initial_size=200)
-demography.add_population_split(time=1000000, derived=["A", "B"], ancestral="AB")
-demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="ABC")
-demography
+#read in range and molecular nexus files
+range_fn =
+mol_fn = 
 
-#tree sequence, with recombination occuring at angiosperm levels and about 1 million base pairs
-ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C":10}, demography=demography, sequence_length=1e6, recombination_rate=1e-8)
-ts = msprime.sim_mutations(ts, rate=1e-8, model="jc69") #add genetic mutations
+#read in matrices
+geo_fn = "/simulated."
+times_fn = geo_fn + ".times.*.txt"
+dist_fn = geo_fn + ".distances.txt"
 
-#drawing demographic model
-fig, ax = plt.subplots(figsize=(6,4))
-demesdraw.tubes(demography.to_demes(), ax=ax)
-plt.show()
+#output
+out_fn = "output/simulationoutput"
 
-#displaying divergence times in the tree
-tree = ts.first()
-newick_tree = tree.newick()
-print(newick_tree)
+#analysis helper variables ?
+n_gen = 25000 
 
-#find the divergence times
-divergence_times = [tree.time(root) for root in tree.roots]
-print(divergence_times)
-#should be near 3,000,000
-#we could adjust for generation time here where T_generations = T_divergence / [number of years in genereation]. But because Podostemaceae are annuals we will keep it as is
+#read in molecular alignment
+dat_mol = readDiscreteCharacterData(mol_fn) #not going to work need to define molecular simulation
 
-#code in to plot in r: 
-#library(ape)
-#tree<-ape::read.tree(text= "add_newick_here")
-#plot(tree)
-#or save this to a .nwk file via nano and open in R for visualization
+#read in species ranges
+dat_range_01 = readDiscreteCharacterData(range_fn)
 
-
-###alternative method not working
-import msprime
-
-# Define demographic model with populations and their splits
-demography = msprime.Demography()
-demography.add_population(name="Ancestral", initial_size=20000)
-demography.add_population(name="Pop1", initial_size=10000)
-demography.add_population(name="Pop2", initial_size=5000)
-demography.add_population(name="Pop3", initial_size=8000)
-
-# Define multiple split events
-demography.add_population_split(time=5000, derived=["Pop1", "Pop2"], ancestral="Ancestral")
-demography.add_population_split(time=3000, derived=["Pop3"], ancestral="Pop2")
-
-# Function to reconstruct a population tree from msprime.Demography
-def demography_to_newick(demography):
-    """
-    Convert an msprime demographic model into a Newick tree of populations.
-    """
-    # Dictionary to track relationships
-    pop_tree = {pop.name: pop.name for pop in demography.populations}  
-
-    # Get split events (sorted from oldest to most recent)
-    split_events = []
-    for event in demography.events:
-        if isinstance(event, msprime.DemographyEvent):  # Catching split events
-            if hasattr(event, "derived") and hasattr(event, "ancestral") and hasattr(event, "time"):
-                split_events.append((event.derived, event.ancestral, event.time))
-
-    # Sort splits by time (oldest first)
-    split_events.sort(key=lambda x: x[2])
-
-    # Build the Newick tree
-    for derived, ancestral, time in split_events:
-        if isinstance(derived, list):  # Multiple derived populations
-            subtree = "(" + ",".join(f"{pop_tree[pop]}:{time}" for pop in derived) + f")"
-        else:  # Single population split
-            subtree = f"({pop_tree[derived]}:{time})"
-        pop_tree[ancestral] = subtree  # Replace ancestral with updated subtree
-
-    # Return the final tree structure
-    return pop_tree["Ancestral"] + ";"
-
-# Convert to Newick format
-pop_newick_tree = demography_to_newick(demography)
-print(pop_newick_tree)
-
-
-###old demographic model (DO NOT USE)
-# Define a demographic model with populations and a split history
-#demography = msprime.Demography()
-#demography.add_population(name="Ancestral", initial_size=100)
-#demography.add_population(name="Pop1", initial_size=100)
-#demography.add_population(name="Pop2", initial_size=100)
-
-# Define the population split event
-#demography.add_population_split(time=1000000, derived=["Pop1"], ancestral="Pop2")
-#demography.add_population_split(time=3000000, derived=["Pop1", "Pop2"], ancestral="Ancestral")
-#set conditions for mock data, with split occuring 3mya
-
-#define rate of migration before barrier and set migration after split to 0
-#demography.set_migration_rate(source="A", dest="B", rate=migration_rate)
-#demography.set_migration_rate(source="B", dest="A", rate=migration_rate)
-#demography.set_migration_rate(source="C", dest="AB", rate=migration_rate)
-#demography.set_migration_rate(source="AB", dest="C", rate=migration_rate)
-#demography.add_migration_rate_change(time=T_divergence, rate=0)
-
-
-###additional method #working on still, the tree has no branch lenghts?
-import numpy as np
-import dendropy
-
-#create simulation with specifications
-def simulate_barrier_phylogeny(num_species=30, divergence_time=3000000, barrier_effect=0.5):
-   tree = dendropy.Tree()
-   root = tree.seed_node
-   for i in range(num_species):
-      new_node = root.new_child(taxon=dendropy.Taxon(label=f"Species_{i+1}"))
-   for node in tree.leaf_nodes():
-      if np.random.rand() < barrier_effect:
-         new_child = node.new_child(taxon=dendropy.Taxon(label=f"{node.taxon.label}_Diverged"))
-         new_child.edge.length = divergence_time
-   return tree
-
-#simulate tree
-simulated_tree = simulate_barrier_phylogeny(num_species=30, divergence_time=3000000, barrier_effect=0.7)
-
-#view tree after converting to Newick
-tree_newick = simulated_tree.as_string(schema="newick")
-print(tree_newick)
