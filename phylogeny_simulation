@@ -21,7 +21,7 @@ demography.add_population_split(time=3_000_000, derived=["AB", "C"], ancestral="
 ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10}, 
                           demography=demography, 
                           sequence_length=1e6, 
-                          recombination_rate=1e-8)
+                          recombination_rate=4.8e-8)
 
 # Define the mutation rate for the lineages, we want to use the GTR model, which is not part of msprime, so we will use tskit and have to define our rate matrix
 mutation_rate = 1e-8
