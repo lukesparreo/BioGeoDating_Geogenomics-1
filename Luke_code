@@ -101,10 +101,11 @@ plt.show()
 
 ###create CONNECTIVITY MATRICES for 3 epochs
 ###create DISTANCE MATRIX
-###create TIMES MATRIX defining when barriers appeared
-###
+###create TIMES MATRICES defining when barriers appeared (5 different models of our estimations)
+###create RANGE nexus file
+###create MOLECULAR SIMULATION
 
-###MOLECULAR SIMULATION revbayes
+###putting the model together
 #general setup
 #conda activate revbayesenv
 #rb
