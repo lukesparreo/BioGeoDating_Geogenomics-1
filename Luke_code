@@ -14,8 +14,8 @@ demography.add_population(name="B", initial_size=50)
 demography.add_population(name="C", initial_size=100)
 demography.add_population(name="AB", initial_size=100)
 demography.add_population(name="ABC", initial_size=200)
-demography.add_population_split(time=1_000_000, derived=["A", "B"], ancestral="AB")
-demography.add_population_split(time=3_000_000, derived=["AB", "C"], ancestral="ABC")
+demography.add_population_split(time=1000000, derived=["A", "B"], ancestral="AB")
+demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="ABC")
 
 # Simulate tree sequence
 ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10}, 
@@ -107,8 +107,8 @@ demography.add_population(name="B", initial_size=50)
 demography.add_population(name="C", initial_size=100)
 demography.add_population(name="AB", initial_size=100)
 demography.add_population(name="ABC", initial_size=200)
-demography.add_population_split(time=1_000_000, derived=["A", "B"], ancestral="AB")
-demography.add_population_split(time=3_000_000, derived=["AB", "C"], ancestral="ABC")
+demography.add_population_split(time=1000000, derived=["A", "B"], ancestral="AB")
+demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="ABC")
 
 # Simulate tree sequence
 ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10}, 
@@ -118,7 +118,7 @@ ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10},
 
 # Define the mutation rate and GTR model parameters
 mutation_rate = 1e-8
-relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  # GTR relative rates
+relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  # GTR relative rates NEED TO CHANGE
 equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  # A, C, G, T frequencies
 
 # Apply GTR mutations to the tree sequence
