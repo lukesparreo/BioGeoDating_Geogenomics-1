@@ -1,0 +1,99 @@
+###Phylogeny simulation plus sequence generation (generates for n=60, select 1 randomly from each population):
+###Still working on refining
+
+
+# Define the demographic model
+demography = msprime.Demography()
+demography.add_population(name="A", initial_size=50)
+demography.add_population(name="B", initial_size=50)
+demography.add_population(name="C", initial_size=100)
+demography.add_population(name="AB", initial_size=100)
+demography.add_population(name="ABC", initial_size=200)
+demography.add_population_split(time=1000000, derived=["A", "B"], ancestral="AB")
+demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="ABC")
+
+# Simulate tree sequence
+ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10}, 
+                          demography=demography, 
+                          sequence_length=10000,  # Adjust this to your needs
+                          recombination_rate=4.8e-8)
+
+# Define the mutation rate and GTR model parameters
+mutation_rate = 1e-8
+relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  # GTR relative rates NEED TO CHANGE
+equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  # A, C, G, T frequencies
+
+# Apply GTR mutations to the tree sequence
+ts = msprime.sim_mutations(
+    ts,
+    rate=mutation_rate,
+    model=msprime.GTR(relative_rates=relative_rates, equilibrium_frequencies=equilibrium_frequencies)
+)
+
+# Function to get MRCA for each population
+def get_population_mrca(ts, pop_name):
+    # Find the population ID from metadata
+    pop_id = next((i.id for i in ts.populations() if i.metadata["name"] == pop_name), None)
+    
+    if pop_id is None:
+        raise ValueError(f"Population {pop_name} not found in tree sequence.")
+    
+    # Get sample nodes for this population
+    sample_nodes = [n for n in ts.samples() if ts.node(n).population == pop_id]
+    
+    if len(sample_nodes) < 2:
+        raise ValueError(f"Not enough samples for population {pop_name} to compute MRCA.")
+
+    # Compute MRCA
+    return ts.first().mrca(*sample_nodes)
+
+# Get MRCA nodes for A, B, and C
+pop_mrcas = {}
+for pop in ["A", "B", "C"]:
+    try:
+        pop_mrcas[pop] = get_population_mrca(ts, pop)
+    except ValueError as e:
+        print(e)
+
+# Compute MRCA for AB (between A and B) and ABC (between AB and C)
+tree = ts.first()
+try:
+    pop_mrcas["AB"] = tree.mrca(pop_mrcas["A"], pop_mrcas["B"])
+    pop_mrcas["ABC"] = tree.mrca(pop_mrcas["AB"], pop_mrcas["C"])
+except KeyError as e:
+    print(f"Error computing MRCA: {e}")
+
+print("Population MRCAs:", pop_mrcas)
+
+# Extract divergence times for populations
+divergence_times = {pop: ts.node(mrca).time for pop, mrca in pop_mrcas.items()}
+print("Divergence times:", divergence_times)
+
+# Get population-level Newick tree
+pop_newick = tree.as_newick(root=pop_mrcas["ABC"])
+print("Population-Level Newick Tree:", pop_newick)
+
+# Simplify the tree sequence to retain only species-level structure
+simplified_ts = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
+
+# Get the first tree from the simplified tree sequence
+collapsed_tree = simplified_ts.first()
+
+# Convert to Newick format
+collapsed_newick = collapsed_tree.as_newick()
+print("Species-Level Newick Tree:", collapsed_newick)
+
+# Save the Newick tree to file
+with open("collapsed_newick.tre", "w") as f:
+    f.write(collapsed_newick)
+
+# Write the Nexus format sequence data
+with open("simulated_sequences.nex", "w") as nexus_file:
+    ts.write_nexus(nexus_file)
+
+# Draw demographic model
+fig, ax = plt.subplots(figsize=(6, 4))
+demesdraw.tubes(demography.to_demes(), ax=ax)
+plt.show()
+
+print("Simulated sequence data has been written to 'simulated_sequences.nex'.")
