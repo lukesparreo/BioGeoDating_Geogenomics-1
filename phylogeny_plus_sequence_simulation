@@ -1,6 +1,12 @@
 ###Phylogeny simulation plus sequence generation (generates for n=60, select 1 randomly from each population):
 ###Still working on refining
 
+#general setup
+#conda activate msprime-env
+#python
+import msprime
+import matplotlib.pyplot as plt
+import demesdraw
 
 # Define the demographic model
 demography = msprime.Demography()
