@@ -154,4 +154,67 @@ n_areas <- dat_range_01.nchar()
 max_areas <- 2
 n_states <- 0
 for (k in 0:max_areas) n_states += choose(n_areas, k)
+#format
+dat_range_n = formatDiscreteCharacterData(dat_range_01, "DEC", n_states)
+
+# Record list of ranges to a file
+state_desc = dat_range_n.getStateDescriptions()
+state_desc_str = "state,range\n"
+for (i in 1:state_desc.size())
+{
+    state_desc_str += (i-1) + "," + state_desc[i] + "\n"
+}
+write(state_desc_str, file=out_fn+".state_labels.txt")
+
+# Read the minimum and maximum ages of the island complexes (are we doing this ?)
+time_bounds <- readDataDelimitedFile(file=times_fn, delimiter=" ")
+n_epochs <- time_bounds.size()
+
+# Read in connectivity matrices
+for (i in 1:n_epochs) {
+  epoch_fn[i] = "simulated.connectivity." + i + ".txt"
+  connectivity[i] <- readDataDelimitedFile(file=epoch_fn[i], delimiter=" ")
+}
+
+# Read the distances
+distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
+
+# Read the tree file
+tree_init = readTrees(tree_fn)[1]
+# And record information about tree file
+taxa = tree_init.taxa()
+n_taxa = taxa.size()
+n_branches = 2 * n_taxa - 2
+
+# Model for tree
+# Get the root age
+root_age ~ dnUniform(0, 1000)
+moves = VectorMoves()
+moves.append( mvScale(root_age, weight=5) )
+
+# Assign the proportion of sampled taxa (we have a non-uniform sampling scheme, but this should suffice).
+rho <- 3/3
+
+# Assign birth/death priors
+birth ~ dnExp(10)
+moves.append( mvScale(birth, weight=2) )
+death ~ dnExp(10)
+moves.append( mvScale(death, weight=2) )
+
+# Initiate tree
+tree ~ dnBDP(lambda=birth, mu=death, rho=rho, rootAge=root_age, taxa=taxa)
+
+# Topology and branch lengths
+moves.append( mvNNI(tree, weight=n_branches/2) )
+moves.append( mvFNPR(tree, weight=n_branches/8) )
+moves.append( mvNodeTimeSlideUniform(tree, weight=n_branches/2) )
+moves.append( mvSubtreeScale(tree, weight=n_branches/8) )
+moves.append( mvTreeScale(tree, root_age, weight=n_branches/8) )
+
+# Provide starting tree for biogeographic model 
+tree.setValue(tree_init)
+root_age.setValue(tree_init.rootAge())
+
+# Creating molecular model
+
 
