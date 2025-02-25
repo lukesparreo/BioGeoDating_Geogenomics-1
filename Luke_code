@@ -194,7 +194,7 @@ print("Updated Nexus file has been written to 'simulated_sequences_single_update
 
 # Read in files
 range_fn = "simulated.range.nex"
-mol_fn = "simulated_sequences_single.nex"
+mol_fn = "simulated_sequences_single_updated.nex"
 tree_fn = "collapsed_newick.tre"
 out_fn = "output/simulationoutput"
 times_fn = "simulated.times.awarerelaxed.txt"
