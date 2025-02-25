@@ -1,4 +1,5 @@
 ###Phylogeny simulation plus sequence generation (generates for n=60, select 1 randomly from each population):
+### Should we select 2 randomly? Try one first. Also, check model of molecular evolution allowed in revbayes and see if we need to us HYK here instead
 ###Still working on refining
 
 # general setup
