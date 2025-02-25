@@ -21,12 +21,12 @@ demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="AB
 # Simulate tree sequence
 ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10}, 
                           demography=demography, 
-                          sequence_length=10000,  # Adjust this to your needs
+                          sequence_length=10000,  #Adjust to more if computationally possible
                           recombination_rate=4.8e-8)
 
 # Define the mutation rate and GTR model parameters
 mutation_rate = 1e-8
-relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  # GTR relative rates NEED TO CHANGE
+relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  # GTR relative rates NEED TO CHANGE for realism
 equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  # A, C, G, T frequencies
 
 # Apply GTR mutations to the tree sequence
