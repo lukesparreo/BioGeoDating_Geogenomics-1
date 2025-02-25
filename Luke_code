@@ -31,7 +31,7 @@ mutation_rate = 1e-8
 kappa = 2.0  # Transition/transversion ratio for HKY model
 equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  #A, C, G, T frequencies
 
-# Apply GTR mutations to the tree sequence
+# Apply HKY mutations to the tree sequence
 ts = msprime.sim_mutations(
     ts,
     rate=mutation_rate,
