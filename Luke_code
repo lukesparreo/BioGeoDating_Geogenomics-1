@@ -26,16 +26,16 @@ ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10},
                           sequence_length=10000,  #Adjust to a higher length if computationally feasbile in later steps
                           recombination_rate=4.8e-8)
 
-# Define the mutation rate and GTR model parameters
+# Define the mutation rate and HKY model parameters
 mutation_rate = 1e-8
-relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  #GTR relative rates NEED TO CHANGE for realism (find a study)
+kappa = 2.0  # Transition/transversion ratio for HKY model
 equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  #A, C, G, T frequencies
 
 # Apply GTR mutations to the tree sequence
 ts = msprime.sim_mutations(
     ts,
     rate=mutation_rate,
-    model=msprime.GTR(relative_rates=relative_rates, equilibrium_frequencies=equilibrium_frequencies)
+    model=msprime.HKY(kappa=kappa, equilibrium_frequencies=equilibrium_frequencies)
 )
 
 # Function to get MRCA for each population
@@ -114,6 +114,8 @@ plt.show()
 print("Simulated sequence data has been written to:")
 print("- Full dataset: 'simulated_sequences.nex'")
 print("- Single-individual dataset: 'simulated_sequences_single.nex'")
+
+#fix missing data to bases
 
 ###IN REVBAYES, BEGIN ANALYSIS
 #created CONNECTIVITY MATRICES for 3 epochs
