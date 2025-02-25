@@ -115,7 +115,69 @@ print("Simulated sequence data has been written to:")
 print("- Full dataset: 'simulated_sequences.nex'")
 print("- Single-individual dataset: 'simulated_sequences_single.nex'")
 
-#fix missing data to bases
+# Replace missing data in simplified nexus file with base pairs shared aross all 3 taxa
+import random
+
+def replace_missing_with_shared_base(sequences):
+    # Replace each '?' with a random base pair for all sequences at that position
+    num_sites = len(sequences[0])
+    updated_sequences = []
+    
+    for i in range(num_sites):
+        if any(seq[i] == '?' for seq in sequences):  # If any sequence has '?' at this site
+            # Choose a random base to replace the '?'
+            random_base = random.choice(['A', 'C', 'G', 'T'])
+            # Replace '?' in all sequences at this site with the random base
+            for j in range(len(sequences)):
+                sequences[j] = sequences[j][:i] + random_base + sequences[j][i+1:]
+    
+    return sequences
+
+def read_nexus_file(file_path):
+    # Read the Nexus file and extract the sequences
+    with open(file_path, "r") as nexus_file:
+        lines = nexus_file.readlines()
+
+    # Find the lines between the MATRIX block
+    data_start = lines.index("  MATRIX\n") + 1
+    data_end = lines.index("  ;\n", data_start)
+
+    # Extract the sequences
+    sequences = [line.split()[1] for line in lines[data_start:data_end]]
+    
+    # Keep the header up to just before the MATRIX block, and ignore the rest (including TREES)
+    header_lines = lines[:data_start]
+    
+    return sequences, header_lines
+
+def write_nexus_file(output_path, header_lines, sequences, num_taxa):
+    # Write the modified sequences back to a new Nexus file
+    with open(output_path, "w") as nexus_file:
+        # Write header
+        nexus_file.write("#NEXUS\n")
+        nexus_file.write("BEGIN DATA;\n")
+        nexus_file.write(f"  DIMENSIONS NTAX={num_taxa} NCHAR={len(sequences[0])};\n")
+        nexus_file.write("  FORMAT DATATYPE=DNA MISSING=?;\n")
+        nexus_file.write("  MATRIX\n")
+        
+        # Write sequences
+        for i, seq in enumerate(sequences):
+            nexus_file.write(f"n{i}    {seq}\n")
+        
+        nexus_file.write("  ;\n")
+        nexus_file.write("END;\n")
+
+# Read the Nexus file
+sequences, header_lines = read_nexus_file("simulated_sequences_single.nex")
+
+# Replace missing values with shared random base at each site
+updated_sequences = replace_missing_with_shared_base(sequences)
+
+# Write the updated sequences back to a new Nexus file
+write_nexus_file("simulated_sequences_single_updated.nex", header_lines, updated_sequences, num_taxa=len(sequences))
+
+print("Updated Nexus file has been written to 'simulated_sequences_single_updated.nex'")
+
 
 ###IN REVBAYES, BEGIN ANALYSIS
 #created CONNECTIVITY MATRICES for 3 epochs
