@@ -1,9 +1,9 @@
 ###Phylogeny simulation plus sequence generation (generates for n=60, select 1 randomly from each population):
 ###Still working on refining
 
-#general setup
-#conda activate msprime-env
-#python
+# general setup
+# conda activate msprime-env
+# python
 import msprime
 import matplotlib.pyplot as plt
 import demesdraw
@@ -21,13 +21,13 @@ demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="AB
 # Simulate tree sequence
 ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10}, 
                           demography=demography, 
-                          sequence_length=10000,  #Adjust to more if computationally possible
+                          sequence_length=10000,  #Adjust to a higher length if computationally feasbile in later steps
                           recombination_rate=4.8e-8)
 
 # Define the mutation rate and GTR model parameters
 mutation_rate = 1e-8
-relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  # GTR relative rates NEED TO CHANGE for realism
-equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  # A, C, G, T frequencies
+relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  #GTR relative rates NEED TO CHANGE for realism (find a study)
+equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  #A, C, G, T frequencies
 
 # Apply GTR mutations to the tree sequence
 ts = msprime.sim_mutations(
@@ -93,13 +93,22 @@ print("Species-Level Newick Tree:", collapsed_newick)
 with open("collapsed_newick.tre", "w") as f:
     f.write(collapsed_newick)
 
-# Write the Nexus format sequence data
+# Write the full Nexus format sequence data
 with open("simulated_sequences.nex", "w") as nexus_file:
     ts.write_nexus(nexus_file)
+
+# Select n1, n31, and n51 explicitly
+simplified_ts_single = ts.simplify(samples=[1, 31, 51])
+
+# Write the reduced dataset to another Nexus file
+with open("simulated_sequences_single.nex", "w") as nexus_file:
+    simplified_ts_single.write_nexus(nexus_file)
 
 # Draw demographic model
 fig, ax = plt.subplots(figsize=(6, 4))
 demesdraw.tubes(demography.to_demes(), ax=ax)
 plt.show()
 
-print("Simulated sequence data has been written to 'simulated_sequences.nex'.")
+print("Simulated sequence data has been written to:")
+print("- Full dataset: 'simulated_sequences.nex'")
+print("- Single-individual dataset: 'simulated_sequences_single.nex'")
