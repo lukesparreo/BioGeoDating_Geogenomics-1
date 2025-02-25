@@ -197,8 +197,9 @@ range_fn = "simulated.range.nex"
 mol_fn = "simulated_sequences_single_updated.nex"
 tree_fn = "collapsed_newick.tre"
 out_fn = "output/simulationoutput"
-times_fn = "simulated.times.awarerelaxed.txt"
-dist_fn = "simulated.distances.txt"
+geo_fn = "/Users/lukesparreo/simulated_data/simulated"
+times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
+dist_fn = geo_fn + ".distances.txt"
 
 # Read in matrices
 #geo_fn = "/simulated."
@@ -236,7 +237,7 @@ n_epochs <- time_bounds.size()
 
 # Read in connectivity matrices
 for (i in 1:n_epochs) {
-  epoch_fn[i] = "simulated.connectivity." + i + ".txt"
+  epoch_fn[i] = geo_fn + ".connectivity." + i + ".txt"
   connectivity[i] <- readDataDelimitedFile(file=epoch_fn[i], delimiter=" ")
 }
 
@@ -280,5 +281,62 @@ tree.setValue(tree_init)
 root_age.setValue(tree_init.rootAge())
 
 # Creating molecular model
+
+# Base rate for molcular clock
+rate_mol ~ dnLoguniform(1E-6, 1E0)
+rate_mol.setValue(1E-2)
+moves.append( mvScale(rate_mol, lambda=0.2, weight=4) )
+moves.append( mvScale(rate_mol, lambda=1.0, weight=2) )
+
+# Assign log-normal relaxed clock rate
+branch_sd <- 1.0
+branch_mean <- 0.0 - 0.5 * branch_sd^2
+for (i in 1:n_branches) {
+    branch_rate_multiplier[i] ~ dnLognormal(mean=branch_mean, sd=branch_sd)
+    branch_rates[i] := rate_mol * branch_rate_multiplier[i]
+    moves.append( mvScale(branch_rate_multiplier[i]) )
+}
+moves.append( mvVectorScale(branch_rate_multiplier, weight=3) )
+
+# Create HKY rate matrix like we did for Newick
+kappa ~ dnGamma(2,2)
+moves.append( mvScale(kappa) )
+
+bf ~ dnDirichlet([1,1,1,1])
+moves.append( mvSimplexElementScale(bf, alpha=10, weight=2) )
+
+Q_mol := fnHKY(kappa, bf)
+
+alpha ~ dnUniform(0,50)
+moves.append( mvScale(alpha) )
+
+site_rates := fnDiscretizeGamma(alpha, alpha, 4)
+
+m_mol ~ dnPhyloCTMC(Q=Q_mol,
+                    tree=tree,
+                    branchRates=branch_rates,
+                    siteRates=site_rates,
+                    type="DNA",
+                    nSites=dat_mol.nchar())
+
+m_mol.clamp(dat_mol)
+
+# Creating biogeographic model
+
+# Create the biogeographic rate parameters
+rate_bg ~ dnLoguniform(1E-4,1E2)
+rate_bg.setValue(1E-2)
+moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
+moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
+
+# Fix the dispersal rate
+dispersal_rate <- 1.0
+
+# Set distance scale
+distance_scale ~ dnUnif(0,20)
+distance_scale.setValue(0.001)
+moves.append( mvScale(distance_scale, weight=3) )
+
+
 
 
