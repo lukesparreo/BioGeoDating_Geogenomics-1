@@ -444,3 +444,4 @@ mymodel = model(m_bg, ingroup_older_island)
 mymcmc = mcmc(mymodel, moves, monitors)
 mymcmc.run(n_gen)
 
+# Results in /simulated_data/output
