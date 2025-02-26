@@ -193,18 +193,13 @@ print("Updated Nexus file has been written to 'simulated_sequences_single_update
 #leave rb with quit()
 
 # Read in files
-range_fn = "simulated.range.nex"
+range_fn = "simulated_range.nex"
 mol_fn = "simulated_sequences_single_updated.nex"
 tree_fn = "collapsed_newick.tre"
 out_fn = "output/simulationoutput"
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
-
-# Read in matrices
-#geo_fn = "/simulated."
-#times_fn = geo_fn + ".times.*.txt"
-#dist_fn = geo_fn + ".distances.txt"
 
 # Analysis helper variables
 n_gen = 25000
@@ -231,7 +226,8 @@ for (i in 1:state_desc.size())
 }
 write(state_desc_str, file=out_fn+".state_labels.txt")
 
-# Read the minimum and maximum ages of the island complexes (are we doing this ?)
+# Read the minimum and maximum ages of the barrier events
+# CHANGED EPOCHS TO INCLUDE THIRD EPOCH 0,0 is this right?
 time_bounds <- readDataDelimitedFile(file=times_fn, delimiter=" ")
 n_epochs <- time_bounds.size()
 
@@ -253,7 +249,7 @@ n_branches = 2 * n_taxa - 2
 
 # Model for tree
 # Get the root age
-root_age ~ dnUniform(0, 1000)
+root_age ~ dnUniform(0, 1000000000)
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
 
@@ -329,7 +325,7 @@ rate_bg.setValue(1E-2)
 moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
 moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
 
-# Fix the dispersal rate
+# Fix the dispersal rate2
 dispersal_rate <- 1.0
 
 # Set distance scale
@@ -337,6 +333,64 @@ distance_scale ~ dnUnif(0,20)
 distance_scale.setValue(0.001)
 moves.append( mvScale(distance_scale, weight=3) )
 
+# Next, create dispersal rates that are functions of distance  between all pairs of areas, but between areas that exist during epoch i!
+for (i in 1:n_epochs) {
+  for (j in 1:n_areas) {
+    for (k in 1:n_areas) {
+     dr[i][j][k] <- 0.0
+     if (connectivity[i][j][k] > 0) {
+       dr[i][j][k] := dispersal_rate * exp(-distance_scale * distances[j][k])
+     }
+    }
+  }
+}
 
+# Extirpation rates
+log_sd <- 0.5
+log_mean <- ln(1) - 0.5*log_sd^2
+extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
+moves.append( mvScale(extirpation_rate, weight=2) )
 
+for (i in 1:n_epochs) {
+  for (j in 1:n_areas) {
+    for (k in 1:n_areas) {
+      er[i][j][k] <- 0.0
+    }
+    er[i][j][j] := extirpation_rate
+  }
+}
 
+# Build a rate matrix for each time interval
+for (i in 1:n_epochs) {
+  Q_DEC[i] := fnDECRateMatrix(dispersalRates=dr[i],
+                          extirpationRates=er[i],
+                          maxRangeSize=max_areas)
+}
+
+# Treat epoch times as random variables except present is always present
+for (i in 1:n_epochs) {
+  time_max[i] <- time_bounds[i][1]
+  time_min[i] <- time_bounds[i][2]
+  if (i != n_epochs) {
+    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
+    epoch_width = time_bounds[i][1] - time_bounds[i][2]
+    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
+  } else {
+    epoch_times[i] <- 0.0
+  }
+}
+
+Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
+
+# Treat probability of cladogenic events as a random variable to estimate
+clado_event_types <- [ "s", "a" ]
+p_sympatry ~ dnUniform(0,1)
+p_allopatry := abs(1.0 - p_sympatry)
+moves.append( mvSlide(p_sympatry, delta=0.1, weight=2) )
+clado_event_probs := simplex(p_sympatry, p_allopatry)
+P_DEC := fnDECCladoProbs(eventProbs=clado_event_probs,
+                         eventTypes=clado_event_types,
+                         numCharacters=n_areas,
+                         maxRangeSize=max_areas)
+
+# 
