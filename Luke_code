@@ -380,6 +380,7 @@ for (i in 1:n_epochs) {
   }
 }
 
+# Combine the epoch rate matrices and times
 Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
 # Treat probability of cladogenic events as a random variable to estimate
@@ -393,4 +394,53 @@ P_DEC := fnDECCladoProbs(eventProbs=clado_event_probs,
                          numCharacters=n_areas,
                          maxRangeSize=max_areas)
 
-# 
+### Define the state of the root? What is going on here? Tried to remove part about constraining to mainland but it caused problems?
+rf_DEC_tmp <- rep(0, n_states)
+rf_DEC_tmp[n_areas+1] <- 1
+rf_DEC <- simplex(rf_DEC_tmp)
+
+# Create the phylogenetic model of range evolution
+m_bg ~ dnPhyloCTMCClado(tree=tree,
+                           Q=Q_DEC_epoch,
+                           cladoProbs=P_DEC,
+                           branchRates=rate_bg,
+                           rootFrequencies=rf_DEC,
+                           type="NaturalNumbers",
+                           nSites=1)      
+
+# Attach range dataset to model
+m_bg.clamp(dat_range_n)
+
+# Create ingroup clade
+ingroup_clade <- clade("n0",
+                       "n1",
+                       "n2")
+ingroup_age := tmrca(tree, ingroup_clade)
+
+# WHAT IS THIS?!
+for (i in 1:n_epochs) {
+    ingroup_older_island[i] := ifelse(ingroup_age > epoch_times[i], 1, 0)
+}
+
+# Create the standard monitors ?
+monitors = VectorMonitors()
+monitors.append( mnScreen(printgen=100, ingroup_age) )
+monitors.append( mnModel(file=out_fn+".model.log", printgen=100) )
+monitors.append( mnFile(tree, filename=out_fn+".tre", printgen=100) )
+monitors.append( mnJointConditionalAncestralState(tree=tree,
+                                                  ctmc=m_bg,
+                                                  type="NaturalNumbers",
+                                                  withTips=true,
+                                                  withStartStates=true,
+                                                  filename=out_fn+".states.log",
+                                                  printgen=100) )
+monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
+                                          filename=out_fn+".stoch.log",
+                                          printgen=100) )
+# Create model
+mymodel = model(m_bg, ingroup_older_island)
+
+# Run
+mymcmc = mcmc(mymodel, moves, monitors)
+mymcmc.run(n_gen)
+
