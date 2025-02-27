@@ -314,6 +314,10 @@ m_mol ~ dnPhyloCTMC(Q=Q_mol,
 m_mol.clamp(dat_mol)
 
 # Creating biogeographic model
+### THIS IS WHERE ERROR ARISES ### 
+
+#should 0, 0 be in times?
+# ex: (5.5, 4.5)(1.5, 0.5)(0, 0) or (5.5, 4.5)(1.5, 0.5)
 
 # Create the biogeographic rate parameters
 rate_bg ~ dnLoguniform(1E-4,1E2)
