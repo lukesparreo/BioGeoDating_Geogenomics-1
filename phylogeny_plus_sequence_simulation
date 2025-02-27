@@ -1,3 +1,5 @@
+###PHYLOGENY SIMULATION python
+#create ABC tree with 1mya split and 3mya split as a newick file, we will use this tree to create a "fake" biogeography divergence analysis
 ###Phylogeny simulation plus sequence generation (generates for n=60, select 1 randomly from each population):
 ### Should we select 2 randomly? Try one first. Also, check model of molecular evolution allowed in revbayes and see if we need to us HYK here instead
 ###Still working on refining
@@ -8,6 +10,7 @@
 import msprime
 import matplotlib.pyplot as plt
 import demesdraw
+import random
 
 # Define the demographic model
 demography = msprime.Demography()
@@ -25,33 +28,26 @@ ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10},
                           sequence_length=10000,  #Adjust to a higher length if computationally feasbile in later steps
                           recombination_rate=4.8e-8)
 
-# Define the mutation rate and GTR model parameters
+# Define the mutation rate and HKY model parameters
 mutation_rate = 1e-8
-relative_rates = [6.22, 7.41, 4.26, 5.29, 6.54, 7.33]  #GTR relative rates NEED TO CHANGE for realism (find a study)
+kappa = 2.0  # Transition/transversion ratio for HKY model
 equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  #A, C, G, T frequencies
 
-# Apply GTR mutations to the tree sequence
+# Apply HKY mutations to the tree sequence
 ts = msprime.sim_mutations(
     ts,
     rate=mutation_rate,
-    model=msprime.GTR(relative_rates=relative_rates, equilibrium_frequencies=equilibrium_frequencies)
+    model=msprime.HKY(kappa=kappa, equilibrium_frequencies=equilibrium_frequencies)
 )
 
 # Function to get MRCA for each population
 def get_population_mrca(ts, pop_name):
-    # Find the population ID from metadata
     pop_id = next((i.id for i in ts.populations() if i.metadata["name"] == pop_name), None)
-    
     if pop_id is None:
         raise ValueError(f"Population {pop_name} not found in tree sequence.")
-    
-    # Get sample nodes for this population
     sample_nodes = [n for n in ts.samples() if ts.node(n).population == pop_id]
-    
     if len(sample_nodes) < 2:
         raise ValueError(f"Not enough samples for population {pop_name} to compute MRCA.")
-
-    # Compute MRCA
     return ts.first().mrca(*sample_nodes)
 
 # Get MRCA nodes for A, B, and C
@@ -62,7 +58,7 @@ for pop in ["A", "B", "C"]:
     except ValueError as e:
         print(e)
 
-# Compute MRCA for AB (between A and B) and ABC (between AB and C)
+# Compute MRCA for AB and ABC
 tree = ts.first()
 try:
     pop_mrcas["AB"] = tree.mrca(pop_mrcas["A"], pop_mrcas["B"])
@@ -94,16 +90,8 @@ print("Species-Level Newick Tree:", collapsed_newick)
 with open("collapsed_newick.tre", "w") as f:
     f.write(collapsed_newick)
 
-# Write the full Nexus format sequence data
-with open("simulated_sequences.nex", "w") as nexus_file:
-    ts.write_nexus(nexus_file)
-
-# Select n1, n31, and n51 explicitly
-simplified_ts_single = ts.simplify(samples=[1, 31, 51])
-
-# Write the reduced dataset to another Nexus file
-with open("simulated_sequences_single.nex", "w") as nexus_file:
-    simplified_ts_single.write_nexus(nexus_file)
+# Simplify the tree sequence
+simplified_ts = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
 
 # Draw demographic model
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -113,3 +101,75 @@ plt.show()
 print("Simulated sequence data has been written to:")
 print("- Full dataset: 'simulated_sequences.nex'")
 print("- Single-individual dataset: 'simulated_sequences_single.nex'")
+
+# Reformat Nexus file to how Landis script prefers
+input_file = "simulated_sequences_single.nex"
+output_file = "modified_sequences.nex"
+
+with open(input_file, "r") as infile:
+    lines = infile.readlines()
+
+# Extract the MATRIX content and remove anything after it
+start_writing = False
+modified_lines = ["BEGIN DATA;\n", "DIMENSIONS  NTAX=3 NCHAR=10000;\n", "FORMAT DATATYPE=DNA GAP=- MISSING=?;\n", "MATRIX\n"]
+
+for line in lines:
+    if "MATRIX" in line:
+        start_writing = True
+    if start_writing:
+        modified_lines.append(line)
+    if ";" in line and start_writing:  # Stop at the end of MATRIX block
+        break
+
+# Write to a new file
+with open(output_file, "w") as outfile:
+    outfile.writelines(modified_lines)
+
+print(f"Modified NEXUS file saved as {output_file}")
+
+
+### ANCESTRAL SEQUENCE FILLING STARTS HERE ###
+
+# Define nucleotides
+nucleotides = ['A', 'C', 'G', 'T']
+sequence_length = 10000  # Adjust if needed
+
+# Generate ancestral sequence
+ancestral_sequence = ''.join(random.choices(nucleotides, k=sequence_length))
+
+# Function to get mutated sequences
+def get_sequences(ts, ancestral_sequence):
+    sequences = {}
+    for variant in ts.variants():
+        for i, allele in enumerate(variant.alleles):
+            for j in variant.genotypes:
+                if j not in sequences:
+                    node_id = variant.samples[i]  # Get the sample ID (e.g., "n0", "n1", etc.)
+                    sequences[j] = list(ancestral_sequence)
+                if allele != ancestral_sequence[int(variant.site.position)]:
+                    sequences[j][int(variant.site.position)] = allele
+    # Join the lists into strings and preserve the sample names
+    sequences = {variant.samples[i]: ''.join(seq) for i, seq in enumerate(sequences.values())}
+    return sequences
+
+# Get the full sequences
+full_sequences = get_sequences(ts, ancestral_sequence)
+
+# Write sequences in NEXUS format
+output_nexus = "modified_sequences.nex"
+
+with open(output_nexus, "w") as nexus_file:
+    nexus_file.write("#NEXUS\n")
+    nexus_file.write("BEGIN DATA;\n")
+    nexus_file.write(f"DIMENSIONS  NTAX={len(full_sequences)} NCHAR={sequence_length};\n")
+    nexus_file.write("FORMAT DATATYPE=DNA GAP=- MISSING=?;\n")
+    nexus_file.write("MATRIX\n")
+
+    # Assuming 'full_sequences' contains the correct sample names as keys
+    for idx, sample in enumerate(full_sequences):
+        taxon_name = f"n{idx}"  # Assign taxon names like "n0", "n1", "n2"
+        nexus_file.write(f"    {taxon_name} {full_sequences[sample]}\n")
+
+    nexus_file.write(";\nEND;\n")
+
+print(f"Modified NEXUS file written to '{output_nexus}'")
