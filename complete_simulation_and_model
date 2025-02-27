@@ -321,7 +321,7 @@ rate_bg.setValue(1E-2)
 moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
 moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
 
-# Fix the dispersal rate2
+# Fix the dispersal rate
 dispersal_rate <- 1.0
 
 # Set distance scale
