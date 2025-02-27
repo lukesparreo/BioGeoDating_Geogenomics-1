@@ -73,6 +73,20 @@ print("Divergence times:", divergence_times)
 pop_newick = tree.as_newick(root=pop_mrcas["ABC"])
 print("Population-Level Newick Tree:", pop_newick)
 
+# Simplify the tree sequence to retain only species-level structure
+simplified_ts = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
+
+# Get the first tree from the simplified tree sequence
+collapsed_tree = simplified_ts.first()
+
+# Convert to Newick format
+collapsed_newick = collapsed_tree.as_newick()
+print("Species-Level Newick Tree:", collapsed_newick)
+
+# Save the Newick tree to file
+with open("collapsed_newick.tre", "w") as f:
+    f.write(collapsed_newick)
+
 # Simplify the tree sequence
 simplified_ts = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
 
@@ -85,13 +99,40 @@ print("Simulated sequence data has been written to:")
 print("- Full dataset: 'simulated_sequences.nex'")
 print("- Single-individual dataset: 'simulated_sequences_single.nex'")
 
+# Reformat Nexus file to how Landis script prefers
+input_file = "simulated_sequences_single.nex"
+output_file = "modified_sequences.nex"
+
+with open(input_file, "r") as infile:
+    lines = infile.readlines()
+
+# Extract the MATRIX content and remove anything after it
+start_writing = False
+modified_lines = ["BEGIN DATA;\n", "DIMENSIONS  NTAX=3 NCHAR=10000;\n", "FORMAT DATATYPE=DNA GAP=- MISSING=?;\n", "MATRIX\n"]
+
+for line in lines:
+    if "MATRIX" in line:
+        start_writing = True
+    if start_writing:
+        modified_lines.append(line)
+    if ";" in line and start_writing:  # Stop at the end of MATRIX block
+        break
+
+# Write to a new file
+with open(output_file, "w") as outfile:
+    outfile.writelines(modified_lines)
+
+print(f"Modified NEXUS file saved as {output_file}")
+
+
 ### ANCESTRAL SEQUENCE FILLING STARTS HERE ###
 
 # Define nucleotides
 nucleotides = ['A', 'C', 'G', 'T']
+sequence_length = 10000  # Adjust if needed
 
 # Generate ancestral sequence
-ancestral_sequence = ''.join(random.choices(nucleotides, k=int(sequence_length)))
+ancestral_sequence = ''.join(random.choices(nucleotides, k=sequence_length))
 
 # Function to get mutated sequences
 def get_sequences(ts, ancestral_sequence):
@@ -101,7 +142,7 @@ def get_sequences(ts, ancestral_sequence):
             for j in variant.genotypes:
                 if j not in sequences:
                     sequences[j] = list(ancestral_sequence)
-                if allele != ancestral_sequence[variant.site.position]:
+                if allele != ancestral_sequence[int(variant.site.position)]:
                     sequences[j][int(variant.site.position)] = allele
     # Join the lists into strings
     sequences = {key: ''.join(seq) for key, seq in sequences.items()}
@@ -110,9 +151,20 @@ def get_sequences(ts, ancestral_sequence):
 # Get the full sequences
 full_sequences = get_sequences(ts, ancestral_sequence)
 
-# Write the sequences in FASTA format
-with open("simulated_sequences.fasta", "w") as fasta_file:
-    for sample, sequence in full_sequences.items():
-        fasta_file.write(f">Sample_{sample}\n{sequence}\n")
+# Write sequences in NEXUS format
+output_nexus = "modified_sequences.nex"
 
-print("Full simulated sequences written to 'simulated_sequences.fasta'")
+with open(output_nexus, "w") as nexus_file:
+    nexus_file.write("#NEXUS\n")
+    nexus_file.write("BEGIN DATA;\n")
+    nexus_file.write(f"DIMENSIONS  NTAX={len(full_sequences)} NCHAR={sequence_length};\n")
+    nexus_file.write("FORMAT DATATYPE=DNA GAP=- MISSING=?;\n")
+    nexus_file.write("MATRIX\n")
+
+    for sample, sequence in full_sequences.items():
+        nexus_file.write(f"    Sample_{sample} {sequence}\n")
+
+    nexus_file.write(";\nEND;\n")
+
+print(f"Modified NEXUS file written to '{output_nexus}'")
+
