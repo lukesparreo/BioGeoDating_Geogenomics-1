@@ -1,0 +1,447 @@
+###PHYLOGENY SIMULATION python
+#create ABC tree with 1mya split and 3mya split as a newick file, we will use this tree to create a "fake" biogeography divergence analysis
+###Phylogeny simulation plus sequence generation (generates for n=60, select 1 randomly from each population):
+###Still working on refining
+
+# general setup
+# conda activate msprime-env
+# python
+import msprime
+import matplotlib.pyplot as plt
+import demesdraw
+import random
+
+# Define the demographic model
+demography = msprime.Demography()
+demography.add_population(name="A", initial_size=50)
+demography.add_population(name="B", initial_size=50)
+demography.add_population(name="C", initial_size=100)
+demography.add_population(name="AB", initial_size=100)
+demography.add_population(name="ABC", initial_size=200)
+demography.add_population_split(time=1000000, derived=["A", "B"], ancestral="AB")
+demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="ABC")
+
+# Simulate tree sequence
+ts = msprime.sim_ancestry(samples={"A": 10, "B": 10, "C": 10}, 
+                          demography=demography, 
+                          sequence_length=10000,  #Adjust to a higher length if computationally feasbile in later steps
+                          recombination_rate=4.8e-8)
+
+# Define the mutation rate and HKY model parameters
+mutation_rate = 1e-8
+kappa = 2.0  # Transition/transversion ratio for HKY model
+equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  #A, C, G, T frequencies
+
+# Apply HKY mutations to the tree sequence
+ts = msprime.sim_mutations(
+    ts,
+    rate=mutation_rate,
+    model=msprime.HKY(kappa=kappa, equilibrium_frequencies=equilibrium_frequencies)
+)
+
+# Function to get MRCA for each population
+def get_population_mrca(ts, pop_name):
+    pop_id = next((i.id for i in ts.populations() if i.metadata["name"] == pop_name), None)
+    if pop_id is None:
+        raise ValueError(f"Population {pop_name} not found in tree sequence.")
+    sample_nodes = [n for n in ts.samples() if ts.node(n).population == pop_id]
+    if len(sample_nodes) < 2:
+        raise ValueError(f"Not enough samples for population {pop_name} to compute MRCA.")
+    return ts.first().mrca(*sample_nodes)
+
+# Get MRCA nodes for A, B, and C
+pop_mrcas = {}
+for pop in ["A", "B", "C"]:
+    try:
+        pop_mrcas[pop] = get_population_mrca(ts, pop)
+    except ValueError as e:
+        print(e)
+
+# Compute MRCA for AB and ABC
+tree = ts.first()
+try:
+    pop_mrcas["AB"] = tree.mrca(pop_mrcas["A"], pop_mrcas["B"])
+    pop_mrcas["ABC"] = tree.mrca(pop_mrcas["AB"], pop_mrcas["C"])
+except KeyError as e:
+    print(f"Error computing MRCA: {e}")
+
+print("Population MRCAs:", pop_mrcas)
+
+# Extract divergence times for populations
+divergence_times = {pop: ts.node(mrca).time for pop, mrca in pop_mrcas.items()}
+print("Divergence times:", divergence_times)
+
+# Get population-level Newick tree
+pop_newick = tree.as_newick(root=pop_mrcas["ABC"])
+print("Population-Level Newick Tree:", pop_newick)
+
+# Simplify the tree sequence to retain only species-level structure
+simplified_ts = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
+
+# Get the first tree from the simplified tree sequence
+collapsed_tree = simplified_ts.first()
+
+# Convert to Newick format
+collapsed_newick = collapsed_tree.as_newick()
+print("Species-Level Newick Tree:", collapsed_newick)
+
+# Save the Newick tree to file
+with open("collapsed_newick.tre", "w") as f:
+    f.write(collapsed_newick)
+
+# Simplify the tree sequence
+simplified_ts = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
+
+# Draw demographic model
+fig, ax = plt.subplots(figsize=(6, 4))
+demesdraw.tubes(demography.to_demes(), ax=ax)
+plt.show()
+
+print("Simulated sequence data has been written to:")
+print("- Full dataset: 'simulated_sequences.nex'")
+print("- Single-individual dataset: 'simulated_sequences_single.nex'")
+
+# Reformat Nexus file to how Landis script prefers
+input_file = "simulated_sequences_single.nex"
+output_file = "modified_sequences.nex"
+
+with open(input_file, "r") as infile:
+    lines = infile.readlines()
+
+# Extract the MATRIX content and remove anything after it
+start_writing = False
+modified_lines = ["BEGIN DATA;\n", "DIMENSIONS  NTAX=3 NCHAR=10000;\n", "FORMAT DATATYPE=DNA GAP=- MISSING=?;\n", "MATRIX\n"]
+
+for line in lines:
+    if "MATRIX" in line:
+        start_writing = True
+    if start_writing:
+        modified_lines.append(line)
+    if ";" in line and start_writing:  # Stop at the end of MATRIX block
+        break
+
+# Write to a new file
+with open(output_file, "w") as outfile:
+    outfile.writelines(modified_lines)
+
+print(f"Modified NEXUS file saved as {output_file}")
+
+
+### ANCESTRAL SEQUENCE FILLING STARTS HERE ###
+
+# Define nucleotides
+nucleotides = ['A', 'C', 'G', 'T']
+sequence_length = 10000  # Adjust if needed
+
+# Generate ancestral sequence
+ancestral_sequence = ''.join(random.choices(nucleotides, k=sequence_length))
+
+# Function to get mutated sequences
+def get_sequences(ts, ancestral_sequence):
+    sequences = {}
+    for variant in ts.variants():
+        for i, allele in enumerate(variant.alleles):
+            for j in variant.genotypes:
+                if j not in sequences:
+                    node_id = variant.samples[i]  # Get the sample ID (e.g., "n0", "n1", etc.)
+                    sequences[j] = list(ancestral_sequence)
+                if allele != ancestral_sequence[int(variant.site.position)]:
+                    sequences[j][int(variant.site.position)] = allele
+    # Join the lists into strings and preserve the sample names
+    sequences = {variant.samples[i]: ''.join(seq) for i, seq in enumerate(sequences.values())}
+    return sequences
+
+# Get the full sequences
+full_sequences = get_sequences(ts, ancestral_sequence)
+
+# Write sequences in NEXUS format
+output_nexus = "modified_sequences.nex"
+
+with open(output_nexus, "w") as nexus_file:
+    nexus_file.write("#NEXUS\n")
+    nexus_file.write("BEGIN DATA;\n")
+    nexus_file.write(f"DIMENSIONS  NTAX={len(full_sequences)} NCHAR={sequence_length};\n")
+    nexus_file.write("FORMAT DATATYPE=DNA GAP=- MISSING=?;\n")
+    nexus_file.write("MATRIX\n")
+
+    # Assuming 'full_sequences' contains the correct sample names as keys
+    for idx, sample in enumerate(full_sequences):
+        taxon_name = f"n{idx}"  # Assign taxon names like "n0", "n1", "n2"
+        nexus_file.write(f"    {taxon_name} {full_sequences[sample]}\n")
+
+    nexus_file.write(";\nEND;\n")
+
+print(f"Modified NEXUS file written to '{output_nexus}'")
+
+
+
+###IN REVBAYES, BEGIN ANALYSIS
+#created CONNECTIVITY MATRICES for 3 epochs
+#created DISTANCE MATRIX
+#created TIMES MATRICES defining when barriers appeared (5 different models of our estimations)
+#created RANGE nexus file
+#created MOLECULAR SIMULATION
+
+###putting the model together
+#general setup
+#conda activate revbayesenv
+#rb
+#leave rb with quit()
+
+# Read in files
+range_fn = "simulated_range.nex"
+mol_fn = "modified_sequences.nex"
+tree_fn = "collapsed_newick.tre"
+out_fn = "output/simulationoutput"
+geo_fn = "/Users/lukesparreo/simulated_data/simulated"
+times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
+dist_fn = geo_fn + ".distances.txt"
+
+# Analysis helper variables
+n_gen = 25000
+
+# Read in molecular alignment
+dat_mol = readDiscreteCharacterData(mol_fn)
+
+# Read in species ranges
+dat_range_01 = readDiscreteCharacterData(range_fn)
+# Compute the number of ranges when ranges may only be one or two areas in size
+n_areas <- dat_range_01.nchar()
+max_areas <- 2
+n_states <- 0
+for (k in 0:max_areas) n_states += choose(n_areas, k)
+#format
+dat_range_n = formatDiscreteCharacterData(dat_range_01, "DEC", n_states)
+
+# Record list of ranges to a file
+state_desc = dat_range_n.getStateDescriptions()
+state_desc_str = "state,range\n"
+for (i in 1:state_desc.size())
+{
+    state_desc_str += (i-1) + "," + state_desc[i] + "\n"
+}
+write(state_desc_str, file=out_fn+".state_labels.txt")
+
+# Read the minimum and maximum ages of the barrier events
+# CHANGED EPOCHS TO INCLUDE THIRD EPOCH 0,0 is this right?
+time_bounds <- readDataDelimitedFile(file=times_fn, delimiter=" ")
+n_epochs <- time_bounds.size()
+
+# Read in connectivity matrices
+for (i in 1:n_epochs) {
+  epoch_fn[i] = geo_fn + ".connectivity." + i + ".txt"
+  connectivity[i] <- readDataDelimitedFile(file=epoch_fn[i], delimiter=" ")
+}
+
+# Read the distances
+distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
+
+# Read the tree file
+tree_init = readTrees(tree_fn)[1]
+# And record information about tree file
+taxa = tree_init.taxa()
+n_taxa = taxa.size()
+n_branches = 2 * n_taxa - 2
+
+# Model for tree
+# Get the root age
+root_age ~ dnUniform(0, 1000000000)
+moves = VectorMoves()
+moves.append( mvScale(root_age, weight=5) )
+
+# Assign the proportion of sampled taxa (we have a non-uniform sampling scheme, but this should suffice).
+rho <- 3/3
+
+# Assign birth/death priors
+birth ~ dnExp(10)
+moves.append( mvScale(birth, weight=2) )
+death ~ dnExp(10)
+moves.append( mvScale(death, weight=2) )
+
+# Initiate tree
+tree ~ dnBDP(lambda=birth, mu=death, rho=rho, rootAge=root_age, taxa=taxa)
+
+# Topology and branch lengths
+moves.append( mvNNI(tree, weight=n_branches/2) )
+moves.append( mvFNPR(tree, weight=n_branches/8) )
+moves.append( mvNodeTimeSlideUniform(tree, weight=n_branches/2) )
+moves.append( mvSubtreeScale(tree, weight=n_branches/8) )
+moves.append( mvTreeScale(tree, root_age, weight=n_branches/8) )
+
+# Provide starting tree for biogeographic model 
+tree.setValue(tree_init)
+root_age.setValue(tree_init.rootAge())
+
+# Creating molecular model
+
+# Base rate for molcular clock
+rate_mol ~ dnLoguniform(1E-6, 1E0)
+rate_mol.setValue(1E-2)
+moves.append( mvScale(rate_mol, lambda=0.2, weight=4) )
+moves.append( mvScale(rate_mol, lambda=1.0, weight=2) )
+
+# Assign log-normal relaxed clock rate
+branch_sd <- 1.0
+branch_mean <- 0.0 - 0.5 * branch_sd^2
+for (i in 1:n_branches) {
+    branch_rate_multiplier[i] ~ dnLognormal(mean=branch_mean, sd=branch_sd)
+    branch_rates[i] := rate_mol * branch_rate_multiplier[i]
+    moves.append( mvScale(branch_rate_multiplier[i]) )
+}
+moves.append( mvVectorScale(branch_rate_multiplier, weight=3) )
+
+# Create HKY rate matrix like we did for Newick
+kappa ~ dnGamma(2,2)
+moves.append( mvScale(kappa) )
+
+bf ~ dnDirichlet([1,1,1,1])
+moves.append( mvSimplexElementScale(bf, alpha=10, weight=2) )
+
+Q_mol := fnHKY(kappa, bf)
+
+alpha ~ dnUniform(0,50)
+moves.append( mvScale(alpha) )
+
+site_rates := fnDiscretizeGamma(alpha, alpha, 4)
+
+m_mol ~ dnPhyloCTMC(Q=Q_mol,
+                    tree=tree,
+                    branchRates=branch_rates,
+                    siteRates=site_rates,
+                    type="DNA",
+                    nSites=dat_mol.nchar())
+
+m_mol.clamp(dat_mol)
+
+# Creating biogeographic model
+### THIS IS WHERE ERROR ARISES ### 
+
+#should 0, 0 be in times?
+# ex: (5.5, 4.5)(1.5, 0.5)(0, 0) or (5.5, 4.5)(1.5, 0.5)
+
+# Create the biogeographic rate parameters
+rate_bg ~ dnLoguniform(1E-4,1E2)
+rate_bg.setValue(1E-2)
+moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
+moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
+
+# Fix the dispersal rate
+dispersal_rate <- 1.0
+
+# Set distance scale
+distance_scale ~ dnUnif(0,20)
+distance_scale.setValue(0.001)
+moves.append( mvScale(distance_scale, weight=3) )
+
+# Next, create dispersal rates that are functions of distance  between all pairs of areas, but between areas that exist during epoch i!
+for (i in 1:n_epochs) {
+  for (j in 1:n_areas) {
+    for (k in 1:n_areas) {
+     dr[i][j][k] <- 0.0
+     if (connectivity[i][j][k] > 0) {
+       dr[i][j][k] := dispersal_rate * exp(-distance_scale * distances[j][k])
+     }
+    }
+  }
+}
+
+# Extirpation rates
+log_sd <- 0.5
+log_mean <- ln(1) - 0.5*log_sd^2
+extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
+moves.append( mvScale(extirpation_rate, weight=2) )
+
+for (i in 1:n_epochs) {
+  for (j in 1:n_areas) {
+    for (k in 1:n_areas) {
+      er[i][j][k] <- 0.0
+    }
+    er[i][j][j] := extirpation_rate
+  }
+}
+
+# Build a rate matrix for each time interval
+for (i in 1:n_epochs) {
+  Q_DEC[i] := fnDECRateMatrix(dispersalRates=dr[i],
+                          extirpationRates=er[i],
+                          maxRangeSize=max_areas)
+}
+
+# Treat epoch times as random variables except present is always present
+for (i in 1:n_epochs) {
+  time_max[i] <- time_bounds[i][1]
+  time_min[i] <- time_bounds[i][2]
+  if (i != n_epochs) {
+    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
+    epoch_width = time_bounds[i][1] - time_bounds[i][2]
+    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
+  } else {
+    epoch_times[i] <- 0.0
+  }
+}
+
+# Combine the epoch rate matrices and times
+Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
+
+# Treat probability of cladogenic events as a random variable to estimate
+clado_event_types <- [ "s", "a" ]
+p_sympatry ~ dnUniform(0,1)
+p_allopatry := abs(1.0 - p_sympatry)
+moves.append( mvSlide(p_sympatry, delta=0.1, weight=2) )
+clado_event_probs := simplex(p_sympatry, p_allopatry)
+P_DEC := fnDECCladoProbs(eventProbs=clado_event_probs,
+                         eventTypes=clado_event_types,
+                         numCharacters=n_areas,
+                         maxRangeSize=max_areas)
+
+### Define the state of the root? What is going on here? Tried to remove part about constraining to mainland but it caused problems?
+rf_DEC_tmp <- rep(0, n_states)
+rf_DEC_tmp[n_areas+1] <- 1
+rf_DEC <- simplex(rf_DEC_tmp)
+
+# Create the phylogenetic model of range evolution
+m_bg ~ dnPhyloCTMCClado(tree=tree,
+                           Q=Q_DEC_epoch,
+                           cladoProbs=P_DEC,
+                           branchRates=rate_bg,
+                           rootFrequencies=rf_DEC,
+                           type="NaturalNumbers",
+                           nSites=1)      
+
+# Attach range dataset to model
+m_bg.clamp(dat_range_n)
+
+# Create ingroup clade
+ingroup_clade <- clade("n0",
+                       "n1",
+                       "n2")
+ingroup_age := tmrca(tree, ingroup_clade)
+
+# WHAT IS THIS?!
+for (i in 1:n_epochs) {
+    ingroup_older_island[i] := ifelse(ingroup_age > epoch_times[i], 1, 0)
+}
+
+# Create the standard monitors ?
+monitors = VectorMonitors()
+monitors.append( mnScreen(printgen=100, ingroup_age) )
+monitors.append( mnModel(file=out_fn+".model.log", printgen=100) )
+monitors.append( mnFile(tree, filename=out_fn+".tre", printgen=100) )
+monitors.append( mnJointConditionalAncestralState(tree=tree,
+                                                  ctmc=m_bg,
+                                                  type="NaturalNumbers",
+                                                  withTips=true,
+                                                  withStartStates=true,
+                                                  filename=out_fn+".states.log",
+                                                  printgen=100) )
+monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
+                                          filename=out_fn+".stoch.log",
+                                          printgen=100) )
+# Create model
+mymodel = model(m_bg, ingroup_older_island)
+
+# Run
+mymcmc = mcmc(mymodel, moves, monitors)
+mymcmc.run(n_gen)
+
+# Results in /simulated_data/output
