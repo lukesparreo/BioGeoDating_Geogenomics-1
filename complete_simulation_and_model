@@ -181,6 +181,8 @@ print(f"Modified NEXUS file written to '{output_nexus}'")
 #created RANGE nexus file
 #created MOLECULAR SIMULATION
 
+#To check: is there a problem with the tree having a negative branch? Use absolute function
+
 ###putting the model together
 #general setup
 #conda activate revbayesenv
@@ -235,17 +237,16 @@ for (i in 1:n_epochs) {
 # Read the distances
 distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
 
-#is this needed??
-#distance_sum <- 0.0
-#for (i in 1:n_areas) {
-#    for (j in i:n_areas) {
-#        if (i != j) {
-#            distance_sum += distances[i][j]
-#        }
-#    }
-#}
-#num_distances = (n_areas * n_areas - n_areas) / 2
-#distance_mean <- distance_sum / num_distances
+distance_sum <- 0.0
+for (i in 1:n_areas) {
+    for (j in i:n_areas) {
+        if (i != j) {
+            distance_sum += distances[i][j]
+        }
+    }
+}
+num_distances = (n_areas * n_areas - n_areas) / 2
+distance_mean <- distance_sum / num_distances
 
 # Read the tree file
 tree_init = readTrees(tree_fn)[1]
@@ -333,96 +334,73 @@ m_mol.clamp(dat_mol)
 # fix relative anagenetic rate to 1
 rate_bg <- 1.0
 
+rate_bg ~ dnLoguniform(1E-4,1E2)
+rate_bg.setValue(1E-2)
+moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
+moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
+
 # dispersal rate
-dispersal_rate ~ dnExp(5) 
-moves[mvi++] = mvScale(dispersal_rate, weight=4)
-            
-# extirpation rate
-extirpation_rate ~ dnExp(5)
-moves[mvi++] = mvScale(extirpation_rate, weight=4)
-         
-# geographic distance scaler
-distance_scale ~ dnExp(1)
-distance_scale.setValue(0.01)
-moves[mvi++] = mvScale(distance_scale, weight=3)
+dispersal_rate <- 1.0
+distance_scale ~ dnUnif(0,20)
+distance_scale.setValue(0.001)
+moves.append( mvScale(distance_scale, weight=3) )
 
 # then, the dispersal rate matrix
 for (i in 1:n_epochs) {
-    for (j in 1:n_areas) {
-        for (k in 1:n_areas) {
-            dr[i][j][k] <- 0.0
-            if (connectivity[i][j][k] > 0) {
-                dr[i][j][k] := dispersal_rate * (distances[j][k] / distance_mean)^-distan$
-            }
-        }
+  for (j in 1:n_areas) {
+    for (k in 1:n_areas) {
+     dr[i][j][k] <- 0.0
+     if (connectivity[i][j][k] > 0) {
+       dr[i][j][k] := dispersal_rate * exp(-distance_scale * distances[j][k])
+     }
     }
+  }
 }
+            
+# extirpation rate
+log_sd <- 0.5
+log_mean <- ln(1) - 0.5*log_sd^2
+extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
+moves.append( mvScale(extirpation_rate, weight=2) )
 
-# the extirpation rate matrix
 for (i in 1:n_epochs) {
-    for (j in 1:n_areas) {
-        for (k in 1:n_areas) {
-            er[i][j][k] <- 0.0
-        }
-        if (connectivity[i][j][j] > 0) {
-            er[i][j][j] := extirpation_rate
-        }
-    } 
-}
-        
-# build DEC rate matrices
-for (i in 1:n_epochs) {
-    for (j in 1:n_areas) {
-        for (k in 1:n_areas) {
-            dr[i][j][k] <- 0.0
-            if (connectivity[i][j][k] > 0) {
-                dr[i][j][k] := dispersal_rate * (distances[j][k] / distance_mean)^-distan$
-            }
-        }
+  for (j in 1:n_areas) {
+    for (k in 1:n_areas) {
+      er[i][j][k] <- 0.0
     }
-}
-
-# the extirpation rate matrix
-for (i in 1:n_epochs) {
-    for (j in 1:n_areas) {
-        for (k in 1:n_areas) {
-            er[i][j][k] <- 0.0
-        }
-        if (connectivity[i][j][j] > 0) {
-            er[i][j][j] := extirpation_rate
-        }
-    }
+    er[i][j][j] := extirpation_rate
+  }
 }
 
 # build DEC rate matrices
 for (i in 1:n_epochs) {
-    Q_DEC[i] := fnDECRateMatrix(dispersalRates=dr[i],
-                                extirpationRates=er[i],
-                                maxRangeSize=max_areas,
-                                nullRange="CondSurv")
+  Q_DEC[i] := fnDECRateMatrix(dispersalRates=dr[i],
+                          extirpationRates=er[i],
+                          maxRangeSize=max_areas)
 }
             
 # build the epoch times
 for (i in 1:n_epochs) {
-    time_max[i] <- time_bounds[i][1]
-    time_min[i] <- time_bounds[i][2]
-        
-    if (i == n_epochs) {
-        epoch_times[i] <- 0.0
-    } else {
-        epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
-        moves[mvi++] = mvSlide(epoch_times[i], delta=(time_bounds[i][1]-time_bounds[i][2]$
-    }
+  time_max[i] <- time_bounds[i][1]
+  time_min[i] <- time_bounds[i][2]
+  if (i != n_epochs) {
+    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
+    epoch_width = time_bounds[i][1] - time_bounds[i][2]
+    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
+  } else {
+    epoch_times[i] <- 0.0
+  }
 }
                            
 # combine the epoch rate matrices and times
-Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=abs(epoch_times), rates=rep(1, n_epochs))
+Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
 # build cladogenetic transition probabilities
 clado_event_types <- [ "s", "a" ]
-n_clado_events <- clado_event_types.size()
-clado_event_probs ~ dnDirichlet( rep(1, n_clado_events) )
-moves[mvi++] = mvSimplexElementScale(clado_event_probs, alpha=10, weight=3)
+p_sympatry ~ dnUniform(0,1)
+p_allopatry := abs(1.0 - p_sympatry)
+moves.append( mvSlide(p_sympatry, delta=0.1, weight=2) )
+clado_event_probs := simplex(p_sympatry, p_allopatry)
 P_DEC := fnDECCladoProbs(eventProbs=clado_event_probs,
                          eventTypes=clado_event_types,
                          numCharacters=n_areas,
@@ -447,29 +425,33 @@ m_bg.clamp(dat_range_n)
 
 # Monitors
 
-# monitor the age of the silversword ingroup
-ingroup_clade <- clade("Wilkesia_hobdyi",
-                       "Dubautia_reticulata",   
-                       "Dubautia_microcephala",
-                       "Argyroxiphium_caliginis")
+# monitor the age of the ingroup
+ingroup_clade <- clade("n0",
+                       "n1",
+                       "n2"
+                       )
+
+ingroup_age := tmrca(tree, ingroup_clade)
 
 ingroup_age := tmrca(tree, ingroup_clade)
 for (i in 1:n_epochs) {
     ingroup_older_island[i] := ifelse(ingroup_age > epoch_times[i], 1, 0)
 }
 
-monitors[mni++] = mnScreen(printgen=1, dispersal_rate, distance_scale, ingroup_age)
-monitors[mni++] = mnModel(file=out_fn+".model.log", printgen=sample_freq)
-monitors[mni++] = mnFile(tree, filename=out_fn+".tre", printgen=sample_freq)
-if (under_prior == false) {
-    monitors[mni++] = mnStochasticCharacterMap(ctmc=m_bg, filename=out_fn+".stoch.log", p$
-    monitors[mni++] = mnJointConditionalAncestralState(tree=tree,
-                                                           ctmc=m_bg,
-                                                           type="NaturalNumbers",
-                                                           withTips=true,
-                                                           withStartStates=true,
-                                                           filename=out_fn+".states.log",
-                                                           printgen=sample_freq)
+monitors = VectorMonitors()
+monitors.append( mnScreen(printgen=100, ingroup_age) )
+monitors.append( mnModel(file=out_fn+".model.log", printgen=100) )
+monitors.append( mnFile(tree, filename=out_fn+".tre", printgen=100) )
+monitors.append( mnJointConditionalAncestralState(tree=tree,
+                                                  ctmc=m_bg,
+                                                  type="NaturalNumbers",
+                                                  withTips=true,
+                                                  withStartStates=true,
+                                                  filename=out_fn+".states.log",
+                                                  printgen=100) )
+monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
+                                          filename=out_fn+".stoch.log",
+                                          printgen=100) )
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
 
@@ -479,6 +461,13 @@ mymcmc.run(n_gen)
 
 # Results in /simulated_data/output
 
+#Error sources?:
+
+#> print(epoch_times)
+#2.77836,0
+
+#> print(P_DEC)
+#> THIS IS NOT GETTING DEFINED!
 
 
 
