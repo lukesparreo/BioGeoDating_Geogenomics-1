@@ -206,6 +206,7 @@ dat_mol = readDiscreteCharacterData(mol_fn)
 
 # Read in species ranges
 dat_range_01 = readDiscreteCharacterData(range_fn)
+
 # Compute the number of ranges when ranges may only be one or two areas in size
 n_areas <- dat_range_01.nchar()
 max_areas <- 2
@@ -249,16 +250,16 @@ for (i in 1:n_epochs) {
 # Read the distances
 distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
 
-distance_sum <- 0.0
-for (i in 1:n_areas) {
-    for (j in i:n_areas) {
-        if (i != j) {
-            distance_sum += distances[i][j]
-        }
-    }
-}
-num_distances = (n_areas * n_areas - n_areas) / 2
-distance_mean <- distance_sum / num_distances
+#distance_sum <- 0.0
+#for (i in 1:n_areas) {
+#    for (j in i:n_areas) {
+#        if (i != j) {
+#            distance_sum += distances[i][j]
+#        }
+#    }
+#}
+#num_distances = (n_areas * n_areas - n_areas) / 2
+#distance_mean <- distance_sum / num_distances
 
 # Read the tree file
 tree_init = readTrees(tree_fn)[1]
@@ -269,6 +270,7 @@ n_branches = 2 * n_taxa - 2
 
 # Model for tree
 # Get the root age
+#CHECK: is the root age way too high? For example, I have as 100mya here. But in the Landis code he uses 15 for 15mya, not 15,000,000. When I try to write 100, it tells me the Newick node ages are too old for the root age though. So do I need to fix the Newick?
 root_age ~ dnUniform(0, 1000000000)
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
@@ -341,7 +343,9 @@ m_mol.clamp(dat_mol)
 ### THIS IS WHERE ERROR ARISES ### 
 
 # fix relative anagenetic rate to 1
-rate_bg <- 1.0
+
+#this is in the older version of the code, do I want to use it and assign to 1?
+#rate_bg <- 1.0
 
 rate_bg ~ dnLoguniform(1E-4,1E2)
 rate_bg.setValue(1E-2)
@@ -423,13 +427,13 @@ rf_DEC_raw[n_areas+1] <- 1  # "Mainland" (original river) is the only possible s
 rf_DEC                <- simplex(rf_DEC_raw)
     
 # the phylogenetic CTMC with cladogenetic events
-m_bg ~ dnPhyloCTMCClado(=,
+m_bg ~ dnPhyloCTMCClado(tree=tree,
                            Q=Q_DEC_epoch,
                            cladoProbs=P_DEC,
                            branchRates=rate_bg,
                            rootFrequencies=rf_DEC,
                            type="NaturalNumbers",
-                           nSites=1)
+                           nSites=1)     
 
 # attach the range data
 m_bg.clamp(dat_range_n)
