@@ -331,7 +331,7 @@ moves.append( mvScale(alpha) )
 site_rates := fnDiscretizeGamma(alpha, alpha, 4)
 
 m_mol ~ dnPhyloCTMC(Q=Q_mol,
-                    =,
+                    tree=tree,
                     branchRates=branch_rates,
                     siteRates=site_rates,
                     type="DNA",
