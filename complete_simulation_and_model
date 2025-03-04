@@ -263,6 +263,17 @@ distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
 
 # Read the tree file
 tree_init = readTrees(tree_fn)[1]
+
+# Loop over all nodes and scale branch lengths (excluding root)
+for (i in 1:tree_init.nnodes()) {
+    if (!tree_init.isRoot(i)) {
+        tree_init.setBranchLength(i, tree_init.branchLength(i) / 1E6)
+    }
+}
+
+# Print to verify scaled tree:
+print(tree_init)
+
 # And record information about tree file
 taxa = tree_init.taxa()
 n_taxa = taxa.size()
@@ -340,10 +351,9 @@ m_mol ~ dnPhyloCTMC(Q=Q_mol,
 
 m_mol.clamp(dat_mol)
 
-# Creating biogeographic model
+#Creating biogeographic model
 
-# fix relative anagenetic rate to 1
-
+#fix relative anagenetic rate to 1
 #this is in the older version of the code, do I want to use it and assign to 1?
 #rate_bg <- 1.0
 
