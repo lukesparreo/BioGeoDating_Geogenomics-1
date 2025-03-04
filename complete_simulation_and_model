@@ -271,7 +271,8 @@ n_branches = 2 * n_taxa - 2
 # Model for tree
 # Get the root age
 #CHECK: is the root age way too high? For example, I have as 100mya here. But in the Landis code he uses 15 for 15mya, not 15,000,000. When I try to write 100, it tells me the Newick node ages are too old for the root age though. So do I need to fix the Newick?
-root_age ~ dnUniform(0, 1000000000)
+#can I divide my tree lengths by a million to make it fit the model?
+root_age ~ dnUniform(0, 100)
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
 
@@ -340,7 +341,6 @@ m_mol ~ dnPhyloCTMC(Q=Q_mol,
 m_mol.clamp(dat_mol)
 
 # Creating biogeographic model
-### THIS IS WHERE ERROR ARISES ### 
 
 # fix relative anagenetic rate to 1
 
