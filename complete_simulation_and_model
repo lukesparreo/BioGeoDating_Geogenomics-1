@@ -234,15 +234,17 @@ for (i in 1:n_epochs) {
 }
 
 # Introduce the "mainland" as river before it diverges, with 3 final rivers as "islands"
-
-if (!exists("one_island")) one_island = true
-if (one_island) {
-    for (i in 2:n_epochs) {
-        epoch_fn = geo_fn + ".connectivity." + n_epochs + ".txt"
-        # Correct function call
-        connectivity[i] <- readDelimitedDataFile(file=epoch_fn, separator=" ", rownames=FALSE)
-    }
-}
+#ERROR: This code isn't working?
+#if (!exists("one_island")) one_island = true
+#if (one_island) {
+#for (i in 2:n_epochs) {
+#        epoch_fn = geo_fn + ".connectivity." + i + ".txt"
+#        connectivity[i] <- readDelimitedDataFile(file=epoch_fn, header=FALSE, separator=" ", rownames=FALSE)
+         
+         # Print the connectivity matrix for each epoch
+#         print(connectivity[i])
+#     }
+# }
 
 # Read the distances
 distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
