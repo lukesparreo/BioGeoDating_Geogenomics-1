@@ -284,6 +284,8 @@ n_branches = 2 * n_taxa - 2
 #CHECK: is the root age way too high? For example, I have as 100mya here. But in the Landis code he uses 15 for 15mya, not 15,000,000. When I try to write 100, it tells me the Newick node ages are too old for the root age though. So do I need to fix the Newick?
 #can I divide my tree lengths by a million to make it fit the model?
 root_age ~ dnUniform(0, 100)
+#is this an error source? tried and it did not do anything:
+#tree.setAge(tree.getRootIndex(), 50)
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
 
