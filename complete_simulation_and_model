@@ -451,13 +451,30 @@ m_bg ~ dnPhyloCTMCClado(tree=tree,
 m_bg.clamp(dat_range_n)
 
 # Monitors
-
 # monitor the age of the ingroup
 ingroup_clade <- clade("n0",
                        "n1",
                        "n2")
 
+#########
+#I THINK I HAVE TRACED THE ERROR TO HERE:
+#> print(ingroup_age)
+#nan
+#The fact that branchLength(i) returns valid numbers but nodeAge(i) returns nan suggests that the tree might not have node ages properly assigned. This could happen if the tree was read in a way that doesn't retain age information.
+#> for (i in 1:tree_init.nnodes()) {
+#+     print(tree_init.nodeAge(i))
+#+ }
+#nan
+#nan
+#nan
+#nan
+#nan
 ingroup_age := tmrca(tree, ingroup_clade)
+
+#results in: 
+#> print(tmrca(tree, ingroup_clade))
+#nan
+#########
 
 for (i in 1:n_epochs) {
     ingroup_older_island[i] := ifelse(ingroup_age > epoch_times[i], 1, 0)
