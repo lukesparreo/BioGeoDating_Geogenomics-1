@@ -289,7 +289,7 @@ root_age ~ dnUniform(0, 100)
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
 
-# Assign the proportion of sampled taxa (we have a non-uniform sampling scheme, but this should suffice).
+# Assign the proportion of sampled taxa (changed from non-uniform sampling scheme in Landis to complete sampling here
 rho <- 3/3
 
 # Assign birth/death priors
