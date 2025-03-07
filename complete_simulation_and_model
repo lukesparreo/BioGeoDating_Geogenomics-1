@@ -250,21 +250,11 @@ for (i in 1:n_epochs) {
 # Read the distances
 distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
 
-#distance_sum <- 0.0
-#for (i in 1:n_areas) {
-#    for (j in i:n_areas) {
-#        if (i != j) {
-#            distance_sum += distances[i][j]
-#        }
-#    }
-#}
-#num_distances = (n_areas * n_areas - n_areas) / 2
-#distance_mean <- distance_sum / num_distances
-
 # Read the tree file
 tree_init = readTrees(tree_fn)[1]
 
 # Loop over all nodes and scale branch lengths (excluding root)
+#is this working right now? Can rescale manually
 for (i in 1:tree_init.nnodes()) {
     if (!tree_init.isRoot(i)) {
         tree_init.setBranchLength(i, tree_init.branchLength(i) / 1E6)
@@ -282,10 +272,12 @@ n_branches = 2 * n_taxa - 2
 # Model for tree
 # Get the root age
 #CHECK: is the root age way too high? For example, I have as 100mya here. But in the Landis code he uses 15 for 15mya, not 15,000,000. When I try to write 100, it tells me the Newick node ages are too old for the root age though. So do I need to fix the Newick?
-#can I divide my tree lengths by a million to make it fit the model?
+#Right now I rescale tree by dividing by one million to make numbers fit
+
 root_age ~ dnUniform(0, 100)
-#is this an error source? tried and it did not do anything:
+#is this an error source? Similar is done in Landis so it should be ok? Tried and it did not do anything:
 #tree.setAge(tree.getRootIndex(), 50)
+
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
 
@@ -354,15 +346,13 @@ m_mol ~ dnPhyloCTMC(Q=Q_mol,
 m_mol.clamp(dat_mol)
 
 #Creating biogeographic model
-
-#fix relative anagenetic rate to 1
-#this is in the older version of the code, do I want to use it and assign to 1?
-#rate_bg <- 1.0
-
 rate_bg ~ dnLoguniform(1E-4,1E2)
 rate_bg.setValue(1E-2)
 moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
 moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
+#this is in the older version of the code, do I want to use it and assign to 1?
+#fix relative anagenetic rate to 1
+#rate_bg <- 1.0
 
 # fix dispersal rate
 # changed to 0
@@ -455,9 +445,11 @@ m_bg.clamp(dat_range_n)
 ingroup_clade <- clade("n0",
                        "n1",
                        "n2")
+# I also tried to fix the error by removing n2 from the ingroup clade and it did not fix anything
 
-#########
-#I THINK I HAVE TRACED THE ERROR TO HERE:
+# Set ingroup age
+ingroup_age := tmrca(tree, ingroup_clade)
+#is there error here? I actually don't think so, I tried manually setting the root age to a single value (50mya) and the same errors occured downtstream. I might just be getting nan because the root age is a uniform distribution between 0 and 100 MYA.
 #> print(ingroup_age)
 #nan
 #The fact that branchLength(i) returns valid numbers but nodeAge(i) returns nan suggests that the tree might not have node ages properly assigned. This could happen if the tree was read in a way that doesn't retain age information.
@@ -469,12 +461,6 @@ ingroup_clade <- clade("n0",
 #nan
 #nan
 #nan
-ingroup_age := tmrca(tree, ingroup_clade)
-
-#results in: 
-#> print(tmrca(tree, ingroup_clade))
-#nan
-#########
 
 for (i in 1:n_epochs) {
     ingroup_older_island[i] := ifelse(ingroup_age > epoch_times[i], 1, 0)
