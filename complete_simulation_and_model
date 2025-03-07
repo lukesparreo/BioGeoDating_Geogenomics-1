@@ -272,7 +272,7 @@ n_branches = 2 * n_taxa - 2
 # Model for tree
 # Get the root age
 
-root_age ~ dnUniform(0, 100000000)
+root_age ~ dnUniform(0, 100)
 #Right now I rescale tree by dividing by one million to make numbers fit
 #also tried everywhere from (0,10) to (0, 10000000000) and it did not do anything
 #is this an error source? Similar is done in Landis so it should be ok? Tried and it did not do anything:
