@@ -236,17 +236,18 @@ for (i in 1:n_epochs) {
 }
 
 # Introduce the "mainland" as river before it diverges, with 3 final rivers as "islands"
-#ERROR: This code isn't working?
-#if (!exists("one_island")) one_island = true
-#if (one_island) {
-#for (i in 2:n_epochs) {
-#        epoch_fn = geo_fn + ".connectivity." + i + ".txt"
-#        connectivity[i] <- readDelimitedDataFile(file=epoch_fn, header=FALSE, separator=" ", rownames=FALSE)
-         
-         # Print the connectivity matrix for each epoch
-#         print(connectivity[i])
-#     }
-# }
+#This is not working
+if (!exists("one_island")) one_island = true
+if (one_island) {
+for (i in 3:n_epochs) {
+        epoch_fn = geo_fn + ".connectivity." + i + ".txt"
+        connectivity[i] <- readDelimitedDataFile(file=epoch_fn, header=FALSE, separator=" ", rownames=FALSE)
+     }
+ }
+#I understand conceptially what this code is supposed to do but I am not sure how this affects our analyses as it is modifying the connectivity matrix which should already be correct?
+#Error:	Argument or label mismatch for function call.
+#Arguments which could not be matched (we stopped after the first mismatch):  file
+
 
 # Read the distances
 distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
