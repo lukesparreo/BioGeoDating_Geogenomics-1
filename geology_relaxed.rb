@@ -8,7 +8,7 @@ times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Analysis helper variables
-n_gen = 500000
+n_gen = 1000000
 
 # Read in molecular alignment
 dat_mol = readDiscreteCharacterData(mol_fn)
