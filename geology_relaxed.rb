@@ -1,3 +1,4 @@
+### REVBAYES CODE FOR GEO-INFORMED RELAXED MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "tree.tre"
@@ -148,6 +149,7 @@ m_mol ~ dnPhyloCTMC(Q=Q_mol,
 
 m_mol.clamp(dat_mol)
 
+### RUN THIS AS A SECOND BLOCK ###
 #Creating biogeographic model
 rate_bg ~ dnLoguniform(1E-4,1E2)
 rate_bg.setValue(1E-2)
