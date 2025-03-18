@@ -17,7 +17,7 @@
 # Read in files
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
-tree_fn = "collapsed_newick.tre"
+tree_fn = "tree.tre"
 out_fn = "output/simulationoutput"
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
@@ -112,7 +112,7 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # TREE MODEL
 # Get the root age
 
-root_age ~ dnUniform(0, 10)
+root_age ~ dnUniform(3, 10)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
