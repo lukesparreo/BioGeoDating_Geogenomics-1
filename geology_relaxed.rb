@@ -2,7 +2,7 @@ range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "tree.tre"
 out_fn = "output/simulationoutput"
-geo_fn = "/Users/abedoya/Bedoya Dropbox/Bedoya_Research_Group/BioGeoDating_Geogenomics/simulated"
+geo_fn = "/Users/lukesparreo_simulated_data/simulated"
 times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
@@ -248,22 +248,9 @@ m_bg.clamp(dat_range_n)
 ingroup_clade <- clade("n0",
                        "n1",
                        "n2")
-# I also tried to fix the error by removing n2 from the ingroup clade and it did not fix anything
 
 # Set ingroup age
 ingroup_age := tmrca(tree, ingroup_clade)
-#is there error here? I actually don't think so, I tried manually setting the root age to a single value (50mya) and the same errors occured downtstream. I might just be getting nan because the root age is a uniform distribution between 0 and 100 MYA.
-#> print(ingroup_age)
-#nan
-#The fact that branchLength(i) returns valid numbers but nodeAge(i) returns nan suggests that the tree might not have node ages properly assigned. This could happen if the tree was read in a way that doesn't retain age information.
-#> for (i in 1:tree_init.nnodes()) {
-#+     print(tree_init.nodeAge(i))
-#+ }
-#nan
-#nan
-#nan
-#nan
-#nan
 
 for (i in 1:n_epochs) {
     ingroup_older_island[i] := ifelse(ingroup_age > epoch_times[i], 1, 0)
