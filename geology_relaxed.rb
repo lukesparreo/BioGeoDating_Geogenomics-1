@@ -2,7 +2,7 @@ range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "tree.tre"
 out_fn = "output/simulationoutput"
-geo_fn = "/Users/lukesparreo_simulated_data/simulated"
+geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
