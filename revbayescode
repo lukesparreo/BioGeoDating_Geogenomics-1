@@ -62,13 +62,13 @@ for (i in 1:n_epochs) {
 
 # Introduce the "mainland" as river before it diverges, with 3 final rivers as "islands"
 #This is not working
-if (!exists("one_island")) one_island = true
-if (one_island) {
-for (i in 3:n_epochs) {
-        epoch_fn = geo_fn + ".connectivity." + i + ".txt"
-        connectivity[i] <- readDelimitedDataFile(file=epoch_fn, header=FALSE, separator=" ", rownames=FALSE)
-     }
- }
+#if (!exists("one_island")) one_island = true
+#if (one_island) {
+#for (i in 3:n_epochs) {
+#        epoch_fn = geo_fn + ".connectivity." + i + ".txt"
+#        connectivity[i] <- readDelimitedDataFile(file=epoch_fn, header=FALSE, separator=" ", rownames=FALSE)
+#     }
+# }
 #I understand conceptially what this code is supposed to do but I am not sure how this affects our analyses as it is modifying the connectivity matrix which should already be correct?
 #Error:	Argument or label mismatch for function call.
 #Arguments which could not be matched (we stopped after the first mismatch):  file
@@ -82,11 +82,11 @@ tree_init = readTrees(tree_fn)[1]
 
 # Loop over all nodes and scale branch lengths (excluding root)
 #is this working right now? Can rescale manually
-for (i in 1:tree_init.nnodes()) {
-    if (!tree_init.isRoot(i)) {
-        tree_init.setBranchLength(i, tree_init.branchLength(i) / 1E6)
-    }
-}
+#for (i in 1:tree_init.nnodes()) {
+#    if (!tree_init.isRoot(i)) {
+#        tree_init.setBranchLength(i, tree_init.branchLength(i) / 1E6)
+#    }
+#}
 
 # Print to verify scaled tree:
 print(tree_init)
@@ -95,7 +95,6 @@ print(tree_init)
 taxa = tree_init.taxa()
 n_taxa = taxa.size()
 n_branches = 2 * n_taxa - 2
-
 
 # get the converted state descriptions
 state_desc = dat_range_n.getStateDescriptions()
@@ -113,11 +112,7 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # TREE MODEL
 # Get the root age
 
-root_age ~ dnUniform(0, 100)
-#Right now I rescale tree by dividing by one million to make numbers fit
-#also tried everywhere from (0,10) to (0, 10000000000) and it did not do anything. Also tried 0 as 0.000000001
-#is this an error source? Similar is done in Landis so it should be ok? Tried and it did not do anything:
-#tree.setAge(tree.getRootIndex(), 50)
+root_age ~ dnUniform(0, 10)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
