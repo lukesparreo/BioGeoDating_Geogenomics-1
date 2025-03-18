@@ -7,7 +7,7 @@ times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Analysis helper variables
-n_gen = 25000
+n_gen = 500000
 
 # Read in molecular alignment
 dat_mol = readDiscreteCharacterData(mol_fn)
@@ -292,3 +292,28 @@ mymcmc.run(n_gen)
 
 # Results in /simulated_data/output
 ###
+
+##Summarizing output
+
+out_str = "output/simulationoutput"
+out_state_fn = out_str + ".states.log"
+out_tree_fn = out_str + ".tre"
+out_mcc_fn = out_str + ".mcc.tre"
+
+tree_trace = readTreeTrace(file=out_tree_fn, treetype="clock")
+tree_trace.setBurnin(0.25)
+n_burn = tree_trace.getBurnin()
+mcc_tree = mccTree(tree_trace, file=out_mcc_fn)
+
+state_trace = readAncestralStateTrace(file=out_state_fn)
+
+tree_trace = readAncestralStateTreeTrace(file=out_tree_fn, treetype="clock")
+
+anc_tree = ancestralStateTree(tree=mcc_tree,
+                               ancestral_state_trace_vector=state_trace,
+                               tree_trace=tree_trace,
+                               include_start_states=true,
+                               file=out_str+".ase.tre",
+                               burnin=n_burn,
+                               site=1)
+
