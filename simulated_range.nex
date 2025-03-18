@@ -4,6 +4,7 @@ Begin data;
 Dimensions ntax=3 nchar=3;
 Format datatype=Standard missing=? missing=? labels="01";
 Matrix
+	   [abc]
         n0  100
         n1  010
         n2  001
