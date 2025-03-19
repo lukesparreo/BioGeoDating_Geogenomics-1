@@ -2,9 +2,9 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "tree.tre"
-out_fn = "output_aware_uniform_strict/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_unknown/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
-times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
+times_fn = geo_fn + ".times.geounknown.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Analysis helper variables
@@ -44,21 +44,16 @@ for (i in 1:n_epochs) {
   connectivity[i] <- readDataDelimitedFile(file=epoch_fn[i], delimiter=" ")
 }
 
-
-
 # Read the distances
 distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
 
 # Read the tree file
 tree_init = readTrees(tree_fn)[1]
 
-
-
 # And record information about tree file
 taxa = tree_init.taxa()
 n_taxa = taxa.size()
 n_branches = 2 * n_taxa - 2
-
 
 # get the converted state descriptions
 state_desc = dat_range_n.getStateDescriptions()
@@ -71,16 +66,12 @@ for (i in 1:state_desc.size())
 }
 write(state_desc_str, file=out_fn+".state_labels.txt")
 
-#Here, the model on the website has nothing, but the run_model_g1.rev adds in outgroup taxa with clade contraints. I am not doing this here because we have no outgroup. Is this affecting something downstream? I don't think so because the RevBayes website version runs fine without it
+#Here, the model on the website has nothing, but the run_model_g1.rev adds in outgroup taxa with clade contraints. I am not doing this here because we have no outgroup 
 
 # TREE MODEL
 # Get the root age
 
-root_age ~ dnUniform(3, 4)
-#Right now I rescale tree by dividing by one million to make numbers fit
-#also tried everywhere from (0,10) to (0, 10000000000) and it did not do anything. Also tried 0 as 0.000000001
-#is this an error source? Similar is done in Landis so it should be ok? Tried and it did not do anything:
-#tree.setAge(tree.getRootIndex(), 50)
+root_age ~ dnUniform(0, 50)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
@@ -160,7 +151,6 @@ moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
 #rate_bg <- 1.0
 
 # fix dispersal rate
-# changed to 0
 dispersal_rate <- 0.1
 distance_scale ~ dnUnif(0,20)
 distance_scale.setValue(0.001)
@@ -284,7 +274,7 @@ mymcmc.run(n_gen)
 
 ##Summarizing output
 
-out_str = "output_aware_uniform_strict/simulationoutput" #MODIFY EACH RUN!
+out_str = "output_unknown/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
