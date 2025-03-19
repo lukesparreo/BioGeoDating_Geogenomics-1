@@ -2,9 +2,9 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_unknown/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_geo_naive_relaxed/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
-times_fn = geo_fn + ".times.geounknown.txt" #MODIFY EACH RUN!
+times_fn = geo_fn + ".times.naiverelaxed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Analysis helper variables
@@ -274,7 +274,7 @@ mymcmc.run(n_gen)
 
 ##Summarizing output
 
-out_str = "output_unknown/simulationoutput" #MODIFY EACH RUN!
+out_str = "output_geo_naive_relaxed/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
