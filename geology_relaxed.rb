@@ -1,7 +1,7 @@
 ### REVBAYES CODE FOR GEO-INFORMED RELAXED MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
-tree_fn = "tree.tre"
+tree_fn = "collapsed_newick.tre"
 out_fn = "output_unknown/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.geounknown.txt" #MODIFY EACH RUN!
@@ -71,7 +71,7 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # TREE MODEL
 # Get the root age
 
-root_age ~ dnUniform(0, 50)
+root_age ~ dnUniform(3, 4)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
