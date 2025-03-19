@@ -202,6 +202,11 @@ p_allopatry := abs(1.0 - p_sympatry)
 moves.append(mvSlide(p_sympatry, delta=0.1, weight=2))
 clado_event_probs := simplex(p_sympatry, p_allopatry)
 
+P_DEC := fnDECCladoProbs(eventProbs=clado_event_probs,
+                         eventTypes=clado_event_types,
+                         numCharacters=n_areas,
+                         maxRangeSize=max_areas)
+
 # Root frequencies
 rf_DEC_raw            <- rep(0, n_states)
 rf_DEC_raw[n_areas+1] <- 1  # "Mainland" (original river) is the only possible starting state
