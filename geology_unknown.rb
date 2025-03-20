@@ -1,10 +1,11 @@
-### REVBAYES CODE FOR GEO UNKNOWN MODEL ###
+### REVBAYES CODE FOR GEO-INFORMED RELAXED MODEL ###
+
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_unknown_1/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_naive_uniform_relaxed_1/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
-times_fn = geo_fn + ".times.geounknown.txt" #MODIFY EACH RUN!
+times_fn = geo_fn + ".times.naiverelaxed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Analysis helper variables
@@ -36,7 +37,6 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # Read the minimum and maximum ages of the barrier events
 time_bounds <- readDataDelimitedFile(file=times_fn, delimiter=" ")
 n_epochs <- time_bounds.size()
-#n_epochs <- 3
 
 # Read in connectivity matrices
 for (i in 1:n_epochs) {
@@ -55,35 +55,16 @@ taxa = tree_init.taxa()
 n_taxa = taxa.size()
 n_branches = 2 * n_taxa - 2
 
-# get the converted state descriptions
-state_desc = dat_range_n.getStateDescriptions()
-
-# write the state descriptions to file
-state_desc_str = "state,range\n"
-for (i in 1:state_desc.size())
-{
-    state_desc_str += (i-1) + "," + state_desc[i] + "\n"
-}
-write(state_desc_str, file=out_fn+".state_labels.txt")
-
-#Here, the model on the website has nothing, but the run_model_g1.rev adds in outgroup taxa with clade contraints. I am not doing this here because we have no outgroup 
-
 # TREE MODEL
-# Get the root age
-
 root_age ~ dnUniform(3, 4)
-
 moves = VectorMoves()
-moves.append( mvScale(root_age, weight=2) )
-
-# Assign the proportion of sampled taxa (changed from non-uniform sampling scheme in Landis to complete sampling here
-rho <- 3/3
+moves.append( mvScale(root_age, weight=2.5) )
 
 # Assign birth/death priors
 birth ~ dnExp(10)
-moves.append( mvScale(birth, weight=2) )
+moves.append( mvScale(birth, weight=1.5) )
 death ~ dnExp(10)
-moves.append( mvScale(death, weight=2) )
+moves.append( mvScale(death, weight=1.5) )
 
 # Initiate tree
 tree ~ dnBDP(lambda=birth, mu=death, rho=rho, rootAge=root_age, taxa=taxa)
@@ -99,13 +80,11 @@ moves.append( mvTreeScale(tree, root_age, weight=n_branches/8) )
 tree.setValue(tree_init)
 root_age.setValue(tree_init.rootAge())
 
-# Creating molecular model
-
-# Base rate for molcular clock
+# Base rate for molecular clock
 rate_mol ~ dnLoguniform(1E-6, 1E0)
 rate_mol.setValue(1E-2)
-moves.append( mvScale(rate_mol, lambda=0.2, weight=4) )
-moves.append( mvScale(rate_mol, lambda=1.0, weight=2) )
+moves.append( mvScale(rate_mol, lambda=0.2, weight=2.5) )
+moves.append( mvScale(rate_mol, lambda=1.0, weight=1.5) )
 
 # Assign log-normal relaxed clock rate
 branch_sd <- 1.0
@@ -113,21 +92,19 @@ branch_mean <- 0.0 - 0.5 * branch_sd^2
 for (i in 1:n_branches) {
     branch_rate_multiplier[i] ~ dnLognormal(mean=branch_mean, sd=branch_sd)
     branch_rates[i] := rate_mol * branch_rate_multiplier[i]
-    moves.append( mvScale(branch_rate_multiplier[i]) )
+    moves.append( mvScale(branch_rate_multiplier[i], weight=2) )
 }
-moves.append( mvVectorScale(branch_rate_multiplier, weight=3) )
+moves.append( mvVectorScale(branch_rate_multiplier, weight=2.5) )
 
-# Create HKY rate matrix like we did for Newick
+# Create HKY rate matrix
 kappa ~ dnGamma(2,2)
-moves.append( mvScale(kappa) )
+moves.append( mvScale(kappa, weight=2) )
 
 bf ~ dnDirichlet([1,1,1,1])
-moves.append( mvSimplexElementScale(bf, alpha=10, weight=2) )
-
-Q_mol := fnHKY(kappa, bf)
+moves.append( mvSimplexElementScale(bf, alpha=10, weight=1.5) )
 
 alpha ~ dnUniform(0,50)
-moves.append( mvScale(alpha) )
+moves.append( mvScale(alpha, weight=2) )
 
 site_rates := fnDiscretizeGamma(alpha, alpha, 4)
 
@@ -140,129 +117,27 @@ m_mol ~ dnPhyloCTMC(Q=Q_mol,
 
 m_mol.clamp(dat_mol)
 
-### RUN THIS AS A SECOND BLOCK ###
-#Creating biogeographic model
-rate_bg ~ dnLoguniform(1E-4,1E2)
-rate_bg.setValue(1E-2)
-moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
-moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
-
-# fix dispersal rate
-dispersal_rate <- 0.1
-distance_scale ~ dnUnif(0,20)
-distance_scale.setValue(0.001)
-moves.append( mvScale(distance_scale, weight=3) )
-
-# then, the dispersal rate matrix
-for (i in 1:n_epochs) {
-  for (j in 1:n_areas) {
-    for (k in 1:n_areas) {
-     dr[i][j][k] <- 0.0
-     if (connectivity[i][j][k] > 0) {
-       dr[i][j][k] := dispersal_rate * exp(-distance_scale * distances[j][k])
-     }
-    }
-  }
-}
-            
-# extirpation rate
-log_sd <- 0.5
-log_mean <- ln(1) - 0.5*log_sd^2
-extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
-moves.append( mvScale(extirpation_rate, weight=2) )
-
-for (i in 1:n_epochs) {
-  for (j in 1:n_areas) {
-    for (k in 1:n_areas) {
-      er[i][j][k] <- 0.0
-    }
-    er[i][j][j] := extirpation_rate
-  }
-}
-
-# build DEC rate matrices
-for (i in 1:n_epochs) {
-  Q_DEC[i] := fnDECRateMatrix(dispersalRates=dr[i],
-                          extirpationRates=er[i],
-                          maxRangeSize=max_areas)
-}
-            
-# build the epoch times
+# Adjust epoch time moves
 for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
   if (i != n_epochs) {
     epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
     epoch_width = time_bounds[i][1] - time_bounds[i][2]
-    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
+    moves.append( mvSlide(epoch_times[i], delta=epoch_width/4) )
   } else {
     epoch_times[i] <- 0.0
   }
 }
-                           
-# combine the epoch rate matrices and times
-Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
-# build cladogenetic transition probabilities
-clado_event_types <- [ "s", "a" ]
-p_sympatry ~ dnUniform(0,1)
-p_allopatry := abs(1.0 - p_sympatry)
-moves.append( mvSlide(p_sympatry, delta=0.1, weight=2) )
-clado_event_probs := simplex(p_sympatry, p_allopatry)
-# warning: P_DEC is defined, but you can't view it from print(). Instead check print(type(P_DEC)) and str(P_DEC)
-P_DEC := fnDECCladoProbs(eventProbs=clado_event_probs,
-                         eventTypes=clado_event_types,
-                         numCharacters=n_areas,
-                         maxRangeSize=max_areas)
-                       
-# root frequencies
-rf_DEC_raw            <- rep(0, n_states)
-rf_DEC_raw[n_areas+1] <- 1  # "Mainland" (original river) is the only possible starting state
-rf_DEC                <- simplex(rf_DEC_raw)
-    
-# the phylogenetic CTMC with cladogenetic events
-m_bg ~ dnPhyloCTMCClado(tree=tree,
-                           Q=Q_DEC_epoch,
-                           cladoProbs=P_DEC,
-                           branchRates=rate_bg,
-                           rootFrequencies=rf_DEC,
-                           type="NaturalNumbers",
-                           nSites=1)     
+# Adjust dispersal rate scaling move
+moves.append( mvScale(distance_scale, weight=2) )
 
-# attach the range data
-m_bg.clamp(dat_range_n)
+# Adjust cladogenetic event probability move
+moves.append( mvSlide(p_sympatry, delta=0.05, weight=1.5) )
 
-# Monitors
-# monitor the age of the ingroup
-ingroup_clade <- clade("n0",
-                       "n1",
-                       "n2")
-
-# Set ingroup age
-ingroup_age := tmrca(tree, ingroup_clade)
-
-for (i in 1:n_epochs) {
-    ingroup_older_island[i] := ifelse(ingroup_age > epoch_times[i], 1, 0)
-}
-
-monitors = VectorMonitors()
-monitors.append( mnScreen(printgen=100, ingroup_age) )
-monitors.append( mnModel(file=out_fn+".model.log", printgen=100) )
-monitors.append( mnFile(tree, filename=out_fn+".tre", printgen=100) )
-monitors.append( mnJointConditionalAncestralState(tree=tree,
-                                                  ctmc=m_bg,
-                                                  type="NaturalNumbers",
-                                                  withTips=true,
-                                                  withStartStates=true,
-                                                  filename=out_fn+".states.log",
-                                                  printgen=100) )
-monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
-                                          filename=out_fn+".stoch.log",
-                                          printgen=100) )
-# Create model
+# Run MCMC
 mymodel = model(m_bg, ingroup_older_island)
-
-# Run
 mymcmc = mcmc(mymodel, moves, monitors)
 mymcmc.run(n_gen)
 
@@ -271,7 +146,7 @@ mymcmc.run(n_gen)
 
 ##Summarizing output
 
-out_str = "output_unknown_1/simulationoutput" #MODIFY EACH RUN!
+out_str = "output_naive_uniform_relaxed_1/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
