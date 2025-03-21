@@ -35,6 +35,7 @@ for (i in 1:state_desc.size())
 write(state_desc_str, file=out_fn+".state_labels.txt")
 
 # Read the minimum and maximum ages of the barrier events
+    #figure out how to print vector of time_max so I can redefine
 time_bounds <- readDataDelimitedFile(file=times_fn, delimiter=" ")
 n_epochs <- time_bounds.size()
 #n_epochs <- 3
