@@ -8,9 +8,6 @@ geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.geounknown.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
-# Analysis helper variables
-n_gen = 1000000
-
 # Read in molecular alignment
 dat_mol = readDiscreteCharacterData(mol_fn)
 
@@ -77,6 +74,7 @@ root_age ~ dnUniform(3, 25)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=2.5) )
+    #weight = 15 in naive Landis silversword model
 
 # Assign the proportion of sampled taxa (changed from non-uniform sampling scheme in Landis to complete sampling here
 rho <- 3/3
@@ -266,6 +264,16 @@ monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           printgen=100) )
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
+
+# move/monitor index
+# lines hashtagged are in naive Landis silversword model
+
+#mvi = 1
+#mni = 1
+n_gen = 1000000
+#sample_freq = 50
+#under_prior = false
+#if (under_prior) out_fn = out_fn + ".under_prior"
 
 # Run
 mymcmc = mcmc(mymodel, moves, monitors)
