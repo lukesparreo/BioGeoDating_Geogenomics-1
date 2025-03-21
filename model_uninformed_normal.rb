@@ -5,7 +5,7 @@ mol_fn = "modified_sequences.nex"
 tree_fn = "collapsed_newick.tre"
 out_fn = "output_uninformed_normal_1/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
-times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
+times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Analysis helper variables
