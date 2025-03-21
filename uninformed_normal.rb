@@ -1,11 +1,11 @@
-### REVBAYES CODE FOR GEO-NAIVE RELAXED MODEL ###
+### REVBAYES CODE FOR GEOLOGY UNINFORMED NORMAL MODEL ###
 
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_naive_uniform_relaxed_1/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_uninformed_normal_1/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
-times_fn = geo_fn + ".times.naiverelaxed.txt" #MODIFY EACH RUN!
+times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Analysis helper variables
@@ -195,6 +195,7 @@ for (i in 1:n_epochs) {
 }
             
 # build the epoch times
+### NEED TO EDIT HERE ###    
 for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
@@ -278,7 +279,7 @@ mymcmc.run(n_gen)
 
 ##Summarizing output
 
-out_str = "output_naive_uniform_relaxed_1/simulationoutput" #MODIFY EACH RUN!
+out_str = "output_uninformed_normal_1/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
