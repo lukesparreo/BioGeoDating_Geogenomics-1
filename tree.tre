@@ -1,4 +1,0 @@
-#NEXUS
-begin trees;
-	tree tree_1 = [&R] ((n0:1,n1:1):2,n2:3);
-end;
