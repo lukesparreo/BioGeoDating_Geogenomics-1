@@ -191,16 +191,20 @@ for (i in 1:n_epochs) {
 }
             
 # build the epoch times
+# Define the means for each epoch time
+epoch_means <- [3.0, 1.0]  # Centers of the normal distributions for epochs
+
+# Standard deviation for normal distribution (adjust based on uncertainty)
+epoch_sd <- 0.1  # Adjust as needed
+
+# Define the epoch times using a normal prior
 for (i in 1:n_epochs) {
-  time_max[i] <- time_bounds[i][1]
-  time_min[i] <- time_bounds[i][2]
-  if (i != n_epochs) {
-    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
-    epoch_width = time_bounds[i][1] - time_bounds[i][2]
-    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
-  } else {
-    epoch_times[i] <- 0.0
-  }
+    if (i != n_epochs) {
+        epoch_times[i] ~ dnNormal(epoch_means[i], epoch_sd)
+        moves.append( mvSlide(epoch_times[i], delta=epoch_sd/2) )
+    } else {
+        epoch_times[i] <- 0.0  # Ensure last epoch time is fixed at 0
+    }
 }
                            
 # combine the epoch rate matrices and times
