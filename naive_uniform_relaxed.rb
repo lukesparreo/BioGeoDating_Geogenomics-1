@@ -73,6 +73,7 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # Get the root age
 
     #ROOT AGE MUST BE AS OLD AS OLDEST EPOCH TIME
+    #was: (3,4). Tried (4, 5), and (3,5)
 root_age ~ dnUniform(3, 5)
 
 moves = VectorMoves()
