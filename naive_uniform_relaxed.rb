@@ -72,7 +72,8 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # TREE MODEL
 # Get the root age
 
-root_age ~ dnUniform(3, 4)
+    #ROOT AGE MUST BE AS OLD AS OLDEST EPOCH TIME
+root_age ~ dnUniform(3, 5)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=2.5) )
