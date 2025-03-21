@@ -201,6 +201,10 @@ epoch_sd <- 0.1  # Adjust as needed
 for (i in 1:n_epochs) {
     if (i != n_epochs) {
         epoch_times[i] ~ dnNormal(epoch_means[i], epoch_sd)
+        # Manually enforce that epoch_times[i] is greater than or equal to 0, this will remove any issues with the very edge of the left tail of the normal distribution
+        if (epoch_times[i] < 0.0) {
+            epoch_times[i] <- 0
+        }
         moves.append( mvSlide(epoch_times[i], delta=epoch_sd/2) )
     } else {
         epoch_times[i] <- 0.0  # Ensure last epoch time is fixed at 0
