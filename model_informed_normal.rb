@@ -191,22 +191,24 @@ for (i in 1:n_epochs) {
 }
             
 # build the epoch times
-
-#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"
-
+#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
     
 # Define the means for each epoch time
 epoch_means <- [3.0, 1.0]   # Centers of the normal distributions for epochs
 
 # Standard deviation for normal distribution (adjust based on uncertainty)
-epoch_sd <- [0.1]  # Adjust as needed
+epoch_sd <- 0.1  # Adjust as needed
 
 # Define the epoch times using a normal prior
 for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
   if (i != n_epochs) {
-    epoch_times[i] ~ abs(dnNormal(epoch_means[i], epoch_sd))
+    epoch_times[i] ~ dnNormal(epoch_means[i], epoch_sd)
+      # Ensure the sampled epoch times are non-negative
+        if (epoch_times[i] < 0) {
+            epoch_times[i] <- 0.0
+        }
     epoch_width = time_bounds[i][1] - time_bounds[i][2]
     moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
   } else {
@@ -215,7 +217,9 @@ for (i in 1:n_epochs) {
 }
 
 print(epoch_times)
+      
 # combine the epoch rate matrices and times
+#NOT WORKING because dnNormal is domain REAL not REALPOS
 Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
 # build cladogenetic transition probabilities
