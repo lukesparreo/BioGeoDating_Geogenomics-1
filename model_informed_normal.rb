@@ -199,18 +199,20 @@ epoch_sd <- 0.1  # Adjust as needed
 
 # Define the epoch times using a normal prior
 for (i in 1:n_epochs) {
-    if (i != n_epochs) {
-        epoch_times[i] ~ dnNormal(epoch_means[i], epoch_sd)
-        # Manually enforce that epoch_times[i] is greater than or equal to 0, this will remove any issues with the very edge of the left tail of the normal distribution
-        if (epoch_times[i] < 0.0) {
-            epoch_times[i] <- 0
-        }
-        moves.append( mvSlide(epoch_times[i], delta=epoch_sd/2) )
-    } else {
-        epoch_times[i] <- 0.0  # Ensure last epoch time is fixed at 0
+  time_max[i] <- time_bounds[i][1]
+  time_min[i] <- time_bounds[i][2]
+  if (i != n_epochs) {
+    epoch_times[i] ~ dnNormal(epoch_means[i], epoch_sd)
+      if (epoch_times[i] < 0) {
+        epoch_times[i] := 0
     }
+    epoch_width = time_bounds[i][1] - time_bounds[i][2]
+    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
+  } else {
+    epoch_times[i] <- 0.0
+  }
 }
-                           
+                 
 # combine the epoch rate matrices and times
 Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
