@@ -2,7 +2,7 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_informed_normal_1/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_informed_normal_2/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
@@ -191,18 +191,22 @@ for (i in 1:n_epochs) {
 }
             
 # build the epoch times
+
+#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"
+
+    
 # Define the means for each epoch time
-epoch_means <- 3.0, 1.0   # Centers of the normal distributions for epochs
+epoch_means <- [3.0, 1.0]   # Centers of the normal distributions for epochs
 
 # Standard deviation for normal distribution (adjust based on uncertainty)
-epoch_sd <- 0.1  # Adjust as needed
+epoch_sd <- [0.1]  # Adjust as needed
 
 # Define the epoch times using a normal prior
 for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
   if (i != n_epochs) {
-    epoch_times[i] ~ dnLognormal(epoch_means[i], epoch_sd)
+    epoch_times[i] ~ abs(dnNormal(epoch_means[i], epoch_sd))
     epoch_width = time_bounds[i][1] - time_bounds[i][2]
     moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
   } else {
@@ -282,7 +286,7 @@ mymcmc.run(n_gen)
 
 ##Summarizing output
 
-out_str = "output_aware_normal_1/simulationoutput" #MODIFY EACH RUN!
+out_str = "output_aware_normal_2/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
