@@ -192,7 +192,7 @@ for (i in 1:n_epochs) {
             
 # build the epoch times
 # Define the means for each epoch time
-epoch_means <- [3.0, 1.0]  # Centers of the normal distributions for epochs
+epoch_means <- 3.0, 1.0   # Centers of the normal distributions for epochs
 
 # Standard deviation for normal distribution (adjust based on uncertainty)
 epoch_sd <- 0.1  # Adjust as needed
@@ -202,17 +202,15 @@ for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
   if (i != n_epochs) {
-    epoch_times[i] ~ dnNormal(epoch_means[i], epoch_sd)
-      if (epoch_times[i] < 0) {
-        epoch_times[i] := 0
-    }
+    epoch_times[i] ~ dnLognormal(epoch_means[i], epoch_sd)
     epoch_width = time_bounds[i][1] - time_bounds[i][2]
     moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
   } else {
     epoch_times[i] <- 0.0
   }
 }
-                 
+
+print(epoch_times)
 # combine the epoch rate matrices and times
 Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
