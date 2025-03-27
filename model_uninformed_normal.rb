@@ -72,10 +72,7 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 
 # TREE MODEL
 # Get the root age
-
-    #ROOT AGE MUST BE AS OLD AS OLDEST EPOCH TIME
-    #was: (3,4). Tried (4, 5), and (3,5)
-root_age ~ dnUniform(3, 5)
+root_age ~ dnUniform(3, 4)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=2.5) )
@@ -195,20 +192,31 @@ for (i in 1:n_epochs) {
 }
             
 # build the epoch times
-### NEED TO EDIT HERE ###    
+#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
+    
+# Define the means for each epoch time
+alpha <- [900, 100]   # Centers of the gamma distributions for epochs
+
+# Beta for gamma distribution
+beta <- [100, 33.33333] # Adjust as needed
+
+# Define the epoch times using a normal prior
 for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
   if (i != n_epochs) {
-    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
+    epoch_times[i] ~ dnGamma(alpha[i], beta[i])
     epoch_width = time_bounds[i][1] - time_bounds[i][2]
     moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
   } else {
     epoch_times[i] <- 0.0
   }
 }
-                           
+
+print(epoch_times)
+      
 # combine the epoch rate matrices and times
+# doesn't work with dnNormal because dnNormal is domain REAL not REALPOS
 Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
 # build cladogenetic transition probabilities
