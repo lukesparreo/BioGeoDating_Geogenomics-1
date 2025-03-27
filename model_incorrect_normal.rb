@@ -2,7 +2,7 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_incorrect_normal_1/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_incorrect_normal_2/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.incorrect.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
@@ -189,21 +189,33 @@ for (i in 1:n_epochs) {
                           extirpationRates=er[i],
                           maxRangeSize=max_areas)
 }
-            
-# build the epoch times
+
+#build the epoch times
+#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
+    
+# Define the means for each epoch time
+alpha <- [900, 400]   # Centers of the gamma distributions for epochs
+
+# Beta for gamma distribution
+beta <- [300, 200] # Adjust as needed
+
+# Define the epoch times using a normal prior
 for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
   if (i != n_epochs) {
-    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
+    epoch_times[i] ~ dnGamma(alpha[i], beta[i])
     epoch_width = time_bounds[i][1] - time_bounds[i][2]
     moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
   } else {
     epoch_times[i] <- 0.0
   }
 }
-                           
+
+print(epoch_times)
+      
 # combine the epoch rate matrices and times
+# doesn't work with dnNormal because dnNormal is domain REAL not REALPOS
 Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
 # build cladogenetic transition probabilities
@@ -274,7 +286,7 @@ mymcmc.run(n_gen)
 
 ##Summarizing output
 
-out_str = "output_incorrect_normal_1/simulationoutput" #MODIFY EACH RUN!
+out_str = "output_incorrect_normal_2/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
