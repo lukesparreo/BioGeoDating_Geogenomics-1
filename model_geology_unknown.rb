@@ -140,31 +140,10 @@ m_mol.clamp(dat_mol)
 
 ### RUN THIS AS A SECOND BLOCK ###
 #Creating biogeographic model
-rate_bg ~ dnLoguniform(1E-4,1E2)
-rate_bg.setValue(1E-2)
-moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
-moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
-#this is in the older version of the code, do I want to use it and assign to 1?
-#fix relative anagenetic rate to 1
-#rate_bg <- 1.0
+rate_bg <- 1.0
 
 # fix dispersal rate
 dispersal_rate <- 0.1
-distance_scale ~ dnUnif(0,20)
-distance_scale.setValue(0.001)
-moves.append( mvScale(distance_scale, weight=3) )
-
-# then, the dispersal rate matrix
-for (i in 1:n_epochs) {
-  for (j in 1:n_areas) {
-    for (k in 1:n_areas) {
-     dr[i][j][k] <- 0.0
-     if (connectivity[i][j][k] > 0) {
-       dr[i][j][k] := dispersal_rate * exp(-distance_scale * distances[j][k])
-     }
-    }
-  }
-}
             
 # extirpation rate
 log_sd <- 0.5
@@ -172,37 +151,20 @@ log_mean <- ln(1) - 0.5*log_sd^2
 extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
 moves.append( mvScale(extirpation_rate, weight=2) )
 
-for (i in 1:n_epochs) {
-  for (j in 1:n_areas) {
-    for (k in 1:n_areas) {
-      er[i][j][k] <- 0.0
+# the relative dispersal and extirpation rate matrices
+for (i in 1:n_areas) {
+    for (j in 1:n_areas) {
+        er[i][j] <- 0.0
+        dr[i][j] := dispersal_rate
     }
-    er[i][j][j] := extirpation_rate
-  }
+    er[i][i] := extirpation_rate
 }
-
+    
 # build DEC rate matrices
-for (i in 1:n_epochs) {
-  Q_DEC[i] := fnDECRateMatrix(dispersalRates=dr[i],
-                          extirpationRates=er[i],
+Q_DEC := fnDECRateMatrix(dispersalRates=dr,
+                          extirpationRates=er,
                           maxRangeSize=max_areas)
-}
-            
-# build the epoch times
-for (i in 1:n_epochs) {
-  time_max[i] <- time_bounds[i][1]
-  time_min[i] <- time_bounds[i][2]
-  if (i != n_epochs) {
-    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
-    epoch_width = time_bounds[i][1] - time_bounds[i][2]
-    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
-  } else {
-    epoch_times[i] <- 0.0
-  }
-}
                            
-# combine the epoch rate matrices and times
-Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
 # build cladogenetic transition probabilities
 clado_event_types <- [ "s", "a" ]
@@ -223,7 +185,7 @@ rf_DEC                <- simplex(rf_DEC_raw)
     
 # the phylogenetic CTMC with cladogenetic events
 m_bg ~ dnPhyloCTMCClado(tree=tree,
-                           Q=Q_DEC_epoch,
+                           Q=Q_DEC,
                            cladoProbs=P_DEC,
                            branchRates=rate_bg,
                            rootFrequencies=rf_DEC,
@@ -232,6 +194,19 @@ m_bg ~ dnPhyloCTMCClado(tree=tree,
 
 # attach the range data
 m_bg.clamp(dat_range_n)
+
+# build the epoch times
+for (i in 1:n_epochs) {
+  time_max[i] <- time_bounds[i][1]
+  time_min[i] <- time_bounds[i][2]
+  if (i != n_epochs) {
+    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
+    epoch_width = time_bounds[i][1] - time_bounds[i][2]
+    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
+  } else {
+    epoch_times[i] <- 0.0
+  }
+}
 
 # Monitors
 # monitor the age of the ingroup
