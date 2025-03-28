@@ -3,7 +3,7 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_uninformed_normal_1/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_uninformed_normal_2/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
@@ -195,10 +195,9 @@ for (i in 1:n_epochs) {
 #CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
     
 # Define the means for each epoch time
-alpha <- [900, 100]   # Centers of the gamma distributions for epochs
-
+alpha <- [100, 11.111]     # Centers of the gamma distributions for epochs
 # Beta for gamma distribution
-beta <- [100, 33.33333] # Adjust as needed
+beta <- [33.3333, 11.1111]     # Adjust as needed
 
 # Define the epoch times using a normal prior
 for (i in 1:n_epochs) {
@@ -287,7 +286,7 @@ mymcmc.run(n_gen)
 
 ##Summarizing output
 
-out_str = "output_uninformed_normal_1/simulationoutput" #MODIFY EACH RUN!
+out_str = "output_uninformed_normal_2/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
