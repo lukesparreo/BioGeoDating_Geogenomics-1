@@ -1,13 +1,14 @@
+### REVBAYES CODE FOR GEOLOGY INCORRECT NORMAL MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences.nex"
-tree_fn = "tree.tre"
-out_fn = "output/simulationoutput"
-geo_fn = "/Users/abedoya/Bedoya Dropbox/Bedoya_Research_Group/BioGeoDating_Geogenomics/simulated"
-times_fn = geo_fn + ".times.awarerelaxed.txt" #MODIFY EACH RUN!
+tree_fn = "collapsed_newick.tre"
+out_fn = "output_incorrect_normal_2/simulationoutput" #MODIFY EACH RUN!
+geo_fn = "/Users/lukesparreo/simulated_data/simulated"
+times_fn = geo_fn + ".times.incorrect.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Analysis helper variables
-n_gen = 500000
+n_gen = 1000000
 
 # Read in molecular alignment
 dat_mol = readDiscreteCharacterData(mol_fn)
@@ -43,21 +44,16 @@ for (i in 1:n_epochs) {
   connectivity[i] <- readDataDelimitedFile(file=epoch_fn[i], delimiter=" ")
 }
 
-
-
 # Read the distances
 distances <- readDataDelimitedFile(file=dist_fn, delimiter=" ")
 
 # Read the tree file
 tree_init = readTrees(tree_fn)[1]
 
-
-
 # And record information about tree file
 taxa = tree_init.taxa()
 n_taxa = taxa.size()
 n_branches = 2 * n_taxa - 2
-
 
 # get the converted state descriptions
 state_desc = dat_range_n.getStateDescriptions()
@@ -70,16 +66,12 @@ for (i in 1:state_desc.size())
 }
 write(state_desc_str, file=out_fn+".state_labels.txt")
 
-#Here, the model on the website has nothing, but the run_model_g1.rev adds in outgroup taxa with clade contraints. I am not doing this here because we have no outgroup. Is this affecting something downstream? I don't think so because the RevBayes website version runs fine without it
+#Here, the model on the website has nothing, but the run_model_g1.rev adds in outgroup taxa with clade contraints. I am not doing this here because we have no outgroup 
 
 # TREE MODEL
 # Get the root age
 
 root_age ~ dnUniform(3, 4)
-#Right now I rescale tree by dividing by one million to make numbers fit
-#also tried everywhere from (0,10) to (0, 10000000000) and it did not do anything. Also tried 0 as 0.000000001
-#is this an error source? Similar is done in Landis so it should be ok? Tried and it did not do anything:
-#tree.setAge(tree.getRootIndex(), 50)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
@@ -148,6 +140,7 @@ m_mol ~ dnPhyloCTMC(Q=Q_mol,
 
 m_mol.clamp(dat_mol)
 
+### RUN THIS AS A SECOND BLOCK ###
 #Creating biogeographic model
 rate_bg ~ dnLoguniform(1E-4,1E2)
 rate_bg.setValue(1E-2)
@@ -158,7 +151,6 @@ moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
 #rate_bg <- 1.0
 
 # fix dispersal rate
-# changed to 0
 dispersal_rate <- 0.1
 distance_scale ~ dnUnif(0,20)
 distance_scale.setValue(0.001)
@@ -197,21 +189,33 @@ for (i in 1:n_epochs) {
                           extirpationRates=er[i],
                           maxRangeSize=max_areas)
 }
-            
-# build the epoch times
+
+#build the epoch times
+#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
+    
+# Define the means for each epoch time
+alpha <- [900, 400]   # Centers of the gamma distributions for epochs
+
+# Beta for gamma distribution
+beta <- [300, 200] # Adjust as needed
+
+# Define the epoch times using a normal prior
 for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
   if (i != n_epochs) {
-    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
+    epoch_times[i] ~ dnGamma(alpha[i], beta[i])
     epoch_width = time_bounds[i][1] - time_bounds[i][2]
     moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
   } else {
     epoch_times[i] <- 0.0
   }
 }
-                           
+
+print(epoch_times)
+      
 # combine the epoch rate matrices and times
+# doesn't work with dnNormal because dnNormal is domain REAL not REALPOS
 Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
 # build cladogenetic transition probabilities
@@ -248,22 +252,9 @@ m_bg.clamp(dat_range_n)
 ingroup_clade <- clade("n0",
                        "n1",
                        "n2")
-# I also tried to fix the error by removing n2 from the ingroup clade and it did not fix anything
 
 # Set ingroup age
 ingroup_age := tmrca(tree, ingroup_clade)
-#is there error here? I actually don't think so, I tried manually setting the root age to a single value (50mya) and the same errors occured downtstream. I might just be getting nan because the root age is a uniform distribution between 0 and 100 MYA.
-#> print(ingroup_age)
-#nan
-#The fact that branchLength(i) returns valid numbers but nodeAge(i) returns nan suggests that the tree might not have node ages properly assigned. This could happen if the tree was read in a way that doesn't retain age information.
-#> for (i in 1:tree_init.nnodes()) {
-#+     print(tree_init.nodeAge(i))
-#+ }
-#nan
-#nan
-#nan
-#nan
-#nan
 
 for (i in 1:n_epochs) {
     ingroup_older_island[i] := ifelse(ingroup_age > epoch_times[i], 1, 0)
@@ -295,7 +286,7 @@ mymcmc.run(n_gen)
 
 ##Summarizing output
 
-out_str = "output/simulationoutput"
+out_str = "output_incorrect_normal_2/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
@@ -316,4 +307,3 @@ anc_tree = ancestralStateTree(tree=mcc_tree,
                                file=out_str+".ase.tre",
                                burnin=n_burn,
                                site=1)
-
