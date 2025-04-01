@@ -286,7 +286,7 @@ mymcmc.run(n_gen)
 
 ##Summarizing output
 
-out_str = "simulationoutput" #MODIFY EACH RUN!
+out_str = "output_uninformed_normal_2/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
