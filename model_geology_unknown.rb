@@ -255,9 +255,9 @@ mymcmc.run(n_gen)
 # Results in /simulated_data/output
 ###
 
-##Summarizing output
-
-out_str = "output_geo_unknown_2/simulationoutput" #MODIFY EACH RUN!
+# Summarizing output
+# Go to folder of output once run is completed
+out_str = "simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
