@@ -89,17 +89,6 @@ simplified_ts = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["
 # Get the first tree from the simplified tree sequence
 collapsed_tree = simplified_ts.first()
 
-# Function to scale the branch lengths of a tree
-def scale_tree_branch_lengths(tree, scale_factor):
-    # Iterate through the tree and scale the branch lengths
-    for node in tree.nodes():
-        if node.is_internal():
-            node.branch_length *= scale_factor
-
-# Scale the collapsed tree by 1,000,000
-scale_factor = 1e-6  # For scaling to 1,000,000
-scale_tree_branch_lengths(collapsed_tree, scale_factor)
-
 # Convert to Newick format
 collapsed_newick = collapsed_tree.as_newick()
 print("Species-Level Newick Tree:", collapsed_newick)
