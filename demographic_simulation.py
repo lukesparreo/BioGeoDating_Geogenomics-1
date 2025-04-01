@@ -144,3 +144,5 @@ with open(output_file, "w") as outfile:
 
 print(f"Modified NEXUS file saved as {output_file}")
 
+#NOTE: right now you have to edit the newick tree by hand in nano; simply move the decimal place so that the tree is scaled down by a factor of a million (eg: 3.0 instead of 3,000,000)
+
