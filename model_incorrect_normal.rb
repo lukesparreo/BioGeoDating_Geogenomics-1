@@ -284,9 +284,9 @@ mymcmc.run(n_gen)
 # Results in /simulated_data/output
 ###
 
-##Summarizing output
-
-out_str = "output_incorrect_normal_2/simulationoutput" #MODIFY EACH RUN!
+# Summarizing output
+# Go to folder of output once run is completed
+out_str = "simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
@@ -307,3 +307,4 @@ anc_tree = ancestralStateTree(tree=mcc_tree,
                                file=out_str+".ase.tre",
                                burnin=n_burn,
                                site=1)
+    
