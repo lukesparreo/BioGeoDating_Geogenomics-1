@@ -9,6 +9,7 @@ import msprime
 import matplotlib.pyplot as plt
 import demesdraw
 import random
+import numpy as np
 
 # Define generation time (in years per generation)
 generation_time = 1  # 25 years per generation
@@ -42,7 +43,7 @@ equilibrium_frequencies = [0.25, 0.25, 0.25, 0.25]  #A, C, G, T frequencies
 # Apply HKY mutations to the tree sequence
 ts = msprime.sim_mutations(
     ts,
-    rate=mutation_rate,
+    rate=mutation_rate, keep=True,
     model=msprime.HKY(kappa=kappa, equilibrium_frequencies=equilibrium_frequencies)
 )
 
@@ -132,52 +133,4 @@ with open(output_file, "w") as outfile:
     outfile.writelines(modified_lines)
 
 print(f"Modified NEXUS file saved as {output_file}")
-
-
-### ANCESTRAL SEQUENCE FILLING STARTS HERE ###
-
-# Define nucleotides
-nucleotides = ['A', 'C', 'G', 'T']
-sequence_length = 10000  # Adjust if needed
-
-# Generate ancestral sequence
-ancestral_sequence = ''.join(random.choices(nucleotides, k=sequence_length))
-
-# Function to get mutated sequences
-def get_sequences(ts, ancestral_sequence):
-    sequences = {}
-    for variant in ts.variants():
-        for i, allele in enumerate(variant.alleles):
-            for j in variant.genotypes:
-                if j not in sequences:
-                    node_id = variant.samples[i]  # Get the sample ID (e.g., "n0", "n1", etc.)
-                    sequences[j] = list(ancestral_sequence)
-                if allele != ancestral_sequence[int(variant.site.position)]:
-                    sequences[j][int(variant.site.position)] = allele
-    # Join the lists into strings and preserve the sample names
-    sequences = {variant.samples[i]: ''.join(seq) for i, seq in enumerate(sequences.values())}
-    return sequences
-
-# Get the full sequences
-full_sequences = get_sequences(ts, ancestral_sequence)
-
-# Write sequences in NEXUS format
-output_nexus = "modified_sequences.nex"
-
-with open(output_nexus, "w") as nexus_file:
-    nexus_file.write("#NEXUS\n")
-    nexus_file.write("BEGIN DATA;\n")
-    nexus_file.write(f"DIMENSIONS  NTAX={len(full_sequences)} NCHAR={sequence_length};\n")
-    nexus_file.write("FORMAT DATATYPE=DNA GAP=- MISSING=?;\n")
-    nexus_file.write("MATRIX\n")
-
-    # Assuming 'full_sequences' contains the correct sample names as keys
-    for idx, sample in enumerate(full_sequences):
-        taxon_name = f"n{idx}"  # Assign taxon names like "n0", "n1", "n2"
-        nexus_file.write(f"    {taxon_name} {full_sequences[sample]}\n")
-
-    nexus_file.write(";\nEND;\n")
-
-print(f"Modified NEXUS file written to '{output_nexus}'")
-
 
