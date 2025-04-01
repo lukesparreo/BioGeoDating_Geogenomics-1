@@ -270,10 +270,9 @@ mymcmc = mcmc(mymodel, moves, monitors)
 mymcmc.run(n_gen)
 
 # Results in /simulated_data/output
-###
 
-##Summarizing output
-
+# Summarizing output
+# Go to folder of output once run is completed
 out_str = "simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
