@@ -96,10 +96,20 @@ print("Species-Level Newick Tree:", collapsed_newick)
 # Save the Newick tree to file
 with open("collapsed_newick.tre", "w") as f:
     f.write(collapsed_newick)
+    
+# Write the full Nexus format sequence data
+with open("simulated_sequences.nex", "w") as nexus_file:
+    ts.write_nexus(nexus_file)
+
 
 # Simplify the tree sequence
-simplified_ts = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
+simplified_ts_single = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
 
+
+# Write the reduced dataset to another Nexus file
+with open("simulated_sequences_single.nex", "w") as nexus_file:
+    simplified_ts_single.write_nexus(nexus_file)
+    
 # Draw demographic model
 fig, ax = plt.subplots(figsize=(6, 4))
 demesdraw.tubes(demography.to_demes(), ax=ax)
