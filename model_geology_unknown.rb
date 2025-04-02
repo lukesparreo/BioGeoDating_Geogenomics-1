@@ -3,7 +3,7 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_geo_unknown_1/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_geo_unknown_2/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/unknown"
 times_fn = geo_fn + ".times.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
@@ -243,7 +243,7 @@ mymodel = model(m_bg, ingroup_older_island)
 
 #mvi = 1
 #mni = 1
-n_gen = 1000000
+n_gen = 10000000
 #sample_freq = 50
 #under_prior = false
 #if (under_prior) out_fn = out_fn + ".under_prior"
