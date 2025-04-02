@@ -1,6 +1,6 @@
 ### REVBAYES CODE FOR GEO-INFORMED NORMAL MODEL ###
 range_fn = "simulated_range.nex"
-mol_fn = "modified_sequences.nex"
+mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
 out_fn = "output_informed_normal_2/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
