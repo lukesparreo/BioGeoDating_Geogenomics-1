@@ -7,9 +7,6 @@ geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.incorrect.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
-# Analysis helper variables
-n_gen = 1000000
-
 # Read in molecular alignment
 dat_mol = readDiscreteCharacterData(mol_fn)
 
@@ -274,9 +271,13 @@ monitors.append( mnJointConditionalAncestralState(tree=tree,
 monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           filename=out_fn+".stoch.log",
                                           printgen=100) )
+    
+# Analysis helper variables
+n_gen = 10000000
+    
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
-
+    
 # Run
 mymcmc = mcmc(mymodel, moves, monitors)
 mymcmc.run(n_gen)
