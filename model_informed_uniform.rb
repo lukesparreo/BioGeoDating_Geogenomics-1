@@ -1,14 +1,11 @@
 ### REVBAYES CODE FOR GEO-INFORMED UNIFORM MODEL ###
 range_fn = "simulated_range.nex"
-mol_fn = "modified_sequences.nex"
+mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
 out_fn = "output_informed_uniform_1/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "/Users/lukesparreo/simulated_data/simulated"
 times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
-
-# Analysis helper variables
-n_gen = 1000000
 
 # Read in molecular alignment
 dat_mol = readDiscreteCharacterData(mol_fn)
@@ -262,6 +259,10 @@ monitors.append( mnJointConditionalAncestralState(tree=tree,
 monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           filename=out_fn+".stoch.log",
                                           printgen=100) )
+
+# Analysis helper variables
+n_gen = 10000000
+    
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
 
@@ -270,11 +271,10 @@ mymcmc = mcmc(mymodel, moves, monitors)
 mymcmc.run(n_gen)
 
 # Results in /simulated_data/output
-###
 
-##Summarizing output
-
-out_str = "output_informed_uniform_1/simulationoutput" #MODIFY EACH RUN!
+# Summarizing output
+# Go to folder of output once run is completed
+out_str = "simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
