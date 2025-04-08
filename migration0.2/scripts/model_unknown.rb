@@ -1,10 +1,9 @@
-### REVBAYES CODE FOR GEO UNKNOWN MODEL ###
-
+### REVBAYES CODE FOR GEOLOGY UNKNOWN MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
 out_fn = "output_geo_unknown_migration" #MODIFY EACH RUN!
-geo_fn = "unknown"
+geo_fn = "/BioGeoDating_Geogenomics/migration0.2/data/unknown"
 times_fn = geo_fn + ".times.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
@@ -237,16 +236,7 @@ monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           printgen=100) )
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
-
-# move/monitor index
-# lines hashtagged are in naive Landis silversword model
-
-#mvi = 1
-#mni = 1
 n_gen = 10000000
-#sample_freq = 50
-#under_prior = false
-#if (under_prior) out_fn = out_fn + ".under_prior"
 
 # Run
 mymcmc = mcmc(mymodel, moves, monitors)
