@@ -189,7 +189,8 @@ for (i in 1:n_epochs) {
     
 # Define the means for each epoch time
 alpha <- [900, 400]   # Centers of the gamma distributions for epochs
-
+alpha <- [900, 400]   # Centers of the gamma distributions for epochs
+    
 # Beta for gamma distribution
 beta <- [300, 200] # Adjust as needed
 
