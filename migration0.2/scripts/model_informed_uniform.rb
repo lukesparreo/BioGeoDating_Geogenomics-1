@@ -1,4 +1,4 @@
-### REVBAYES CODE FOR GEO-INFORMED UNIFORM MODEL ###
+### REVBAYES CODE FOR GEOLOGY INFORMED UNIFORM MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
