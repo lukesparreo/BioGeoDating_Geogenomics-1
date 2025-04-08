@@ -3,7 +3,7 @@ range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
 out_fn = "output_incorrect_normal1" #MODIFY EACH RUN!
-geo_fn = "/Users/lukesparreo/simulated_data/simulated"
+geo_fn = "/BioGeoDating_Geogenomics/migration0/data/simulated"
 times_fn = geo_fn + ".times.incorrect.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
@@ -191,6 +191,7 @@ for (i in 1:n_epochs) {
 #CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
     
 # Define the means for each epoch time
+alpha <- [900, 400]   # Centers of the gamma distributions for epochs
 alpha <- [900, 400]   # Centers of the gamma distributions for epochs
 
 # Beta for gamma distribution
