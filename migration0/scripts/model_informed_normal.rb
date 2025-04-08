@@ -1,4 +1,4 @@
-### REVBAYES CODE FOR GEO-INFORMED NORMAL MODEL ###
+### REVBAYES CODE FOR GEOLOGY INFORMED NORMAL MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
@@ -33,7 +33,6 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # Read the minimum and maximum ages of the barrier events
 time_bounds <- readDataDelimitedFile(file=times_fn, delimiter=" ")
 n_epochs <- time_bounds.size()
-#n_epochs <- 3
 
 # Read in connectivity matrices
 for (i in 1:n_epochs) {
