@@ -14,11 +14,6 @@ import numpy as np
 # Define generation time (in years per generation)
 generation_time = 1  # 25 years per generation
 
-# Convert population split times from years to generations
-split_time_1 = 1000000 // generation_time  # 100,000 years ago
-split_time_2 = 3000000 // generation_time  # 300,000 years ago
-
-
 # Define the demographic model
 demography = msprime.Demography()
 demography.add_population(name="A", initial_size=50)
