@@ -3,7 +3,7 @@ range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
 out_fn = "output_informed_normal_2/simulationoutput" #MODIFY EACH RUN!
-geo_fn = "/BioGeoDating_Geogenomics/migration0.2/data/simulated"
+geo_fn = "simulated"
 times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
