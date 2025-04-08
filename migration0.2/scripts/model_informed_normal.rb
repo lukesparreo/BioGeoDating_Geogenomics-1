@@ -1,4 +1,4 @@
-### REVBAYES CODE FOR GEO-INFORMED NORMAL MODEL ###
+### REVBAYES CODE FOR GEOLOGY INFORMED NORMAL MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
