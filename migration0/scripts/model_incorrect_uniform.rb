@@ -1,11 +1,10 @@
-### REVBAYES CODE FOR GEOLOGY UNINFORMED NORMAL MODEL ###
-
+### REVBAYES CODE FOR GEOLOGY INCORRECT NORMAL MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_uninformed_normal_migration" #MODIFY EACH RUN!
-geo_fn = "simulated"
-times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
+out_fn = "output_incorrect_uniform1" #MODIFY EACH RUN!
+geo_fn = "/Users/lukesparreo/simulated_data/simulated"
+times_fn = geo_fn + ".times.incorrect.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Read in molecular alignment
@@ -32,7 +31,6 @@ for (i in 1:state_desc.size())
 write(state_desc_str, file=out_fn+".state_labels.txt")
 
 # Read the minimum and maximum ages of the barrier events
-    #figure out how to print vector of time_max so I can redefine
 time_bounds <- readDataDelimitedFile(file=times_fn, delimiter=" ")
 n_epochs <- time_bounds.size()
 #n_epochs <- 3
@@ -69,29 +67,30 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 
 # TREE MODEL
 # Get the root age
+
 root_age ~ dnUniform(3, 4)
 
 moves = VectorMoves()
-moves.append( mvScale(root_age, weight=2.5) )
+moves.append( mvScale(root_age, weight=5) )
 
 # Assign the proportion of sampled taxa (changed from non-uniform sampling scheme in Landis to complete sampling here
 rho <- 3/3
 
 # Assign birth/death priors
 birth ~ dnExp(10)
-moves.append( mvScale(birth, weight=1) )
+moves.append( mvScale(birth, weight=2) )
 death ~ dnExp(10)
-moves.append( mvScale(death, weight=1) )
+moves.append( mvScale(death, weight=2) )
 
 # Initiate tree
 tree ~ dnBDP(lambda=birth, mu=death, rho=rho, rootAge=root_age, taxa=taxa)
 
 # Topology and branch lengths
-moves.append( mvNNI(tree, weight=n_branches/4) )
-moves.append( mvFNPR(tree, weight=n_branches/16) )
-moves.append( mvNodeTimeSlideUniform(tree, weight=n_branches/4) )
-moves.append( mvSubtreeScale(tree, weight=n_branches/16) )
-moves.append( mvTreeScale(tree, root_age, weight=n_branches/16) )
+moves.append( mvNNI(tree, weight=n_branches/2) )
+moves.append( mvFNPR(tree, weight=n_branches/8) )
+moves.append( mvNodeTimeSlideUniform(tree, weight=n_branches/2) )
+moves.append( mvSubtreeScale(tree, weight=n_branches/8) )
+moves.append( mvTreeScale(tree, root_age, weight=n_branches/8) )
 
 # Provide starting tree for biogeographic model 
 tree.setValue(tree_init)
@@ -102,8 +101,8 @@ root_age.setValue(tree_init.rootAge())
 # Base rate for molcular clock
 rate_mol ~ dnLoguniform(1E-6, 1E0)
 rate_mol.setValue(1E-2)
-moves.append( mvScale(rate_mol, lambda=0.2, weight=2) )
-moves.append( mvScale(rate_mol, lambda=1.0, weight=1) )
+moves.append( mvScale(rate_mol, lambda=0.2, weight=4) )
+moves.append( mvScale(rate_mol, lambda=1.0, weight=2) )
 
 # Assign log-normal relaxed clock rate
 branch_sd <- 1.0
@@ -142,17 +141,17 @@ m_mol.clamp(dat_mol)
 #Creating biogeographic model
 rate_bg ~ dnLoguniform(1E-4,1E2)
 rate_bg.setValue(1E-2)
-moves.append( mvScale(rate_bg, lambda=0.2, weight=2) )
-moves.append( mvScale(rate_bg, lambda=1.0, weight=1) )
+moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
+moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
 #this is in the older version of the code, do I want to use it and assign to 1?
 #fix relative anagenetic rate to 1
 #rate_bg <- 1.0
 
 # fix dispersal rate
-dispersal_rate <- 0.2
+dispersal_rate <- 0.1
 distance_scale ~ dnUnif(0,20)
 distance_scale.setValue(0.001)
-moves.append( mvScale(distance_scale, weight=1.5) )
+moves.append( mvScale(distance_scale, weight=3) )
 
 # then, the dispersal rate matrix
 for (i in 1:n_epochs) {
@@ -170,7 +169,7 @@ for (i in 1:n_epochs) {
 log_sd <- 0.5
 log_mean <- ln(1) - 0.5*log_sd^2
 extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
-moves.append( mvScale(extirpation_rate, weight=1) )
+moves.append( mvScale(extirpation_rate, weight=2) )
 
 for (i in 1:n_epochs) {
   for (j in 1:n_areas) {
@@ -187,21 +186,13 @@ for (i in 1:n_epochs) {
                           extirpationRates=er[i],
                           maxRangeSize=max_areas)
 }
-            
-# build the epoch times
-#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
-    
-# Define the means for each epoch time
-alpha <- [100, 11.111]     # Centers of the gamma distributions for epochs
-# Beta for gamma distribution
-beta <- [33.3333, 11.1111]     # Adjust as needed
 
-# Define the epoch times using a normal prior
+#build the epoch times    
 for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
   if (i != n_epochs) {
-    epoch_times[i] ~ dnGamma(alpha[i], beta[i])
+    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
     epoch_width = time_bounds[i][1] - time_bounds[i][2]
     moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
   } else {
@@ -271,13 +262,13 @@ monitors.append( mnJointConditionalAncestralState(tree=tree,
 monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           filename=out_fn+".stoch.log",
                                           printgen=100) )
-
+    
 # Analysis helper variables
 n_gen = 10000000
     
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
-
+    
 # Run
 mymcmc = mcmc(mymodel, moves, monitors)
 mymcmc.run(n_gen)
@@ -308,4 +299,4 @@ anc_tree = ancestralStateTree(tree=mcc_tree,
                                file=out_str+".ase.tre",
                                burnin=n_burn,
                                site=1)
-
+    
