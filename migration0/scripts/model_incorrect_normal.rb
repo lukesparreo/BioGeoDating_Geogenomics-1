@@ -143,9 +143,6 @@ rate_bg ~ dnLoguniform(1E-4,1E2)
 rate_bg.setValue(1E-2)
 moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
 moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
-#this is in the older version of the code, do I want to use it and assign to 1?
-#fix relative anagenetic rate to 1
-#rate_bg <- 1.0
 
 # fix dispersal rate
 dispersal_rate <- 0.1
@@ -188,7 +185,7 @@ for (i in 1:n_epochs) {
 }
 
 #build the epoch times
-#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
+#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"
     
 # Define the means for each epoch time
 alpha <- [900, 400]   # Centers of the gamma distributions for epochs
@@ -246,7 +243,6 @@ m_bg ~ dnPhyloCTMCClado(tree=tree,
 m_bg.clamp(dat_range_n)
 
 # Monitors
-# monitor the age of the ingroup
 ingroup_clade <- clade("n0",
                        "n1",
                        "n2")
