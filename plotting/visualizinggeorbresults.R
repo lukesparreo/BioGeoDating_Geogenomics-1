@@ -5,7 +5,7 @@ library(ggtree)
 library(grid)
 library(gridExtra)
 
-setwd("~/simulated_data/output_aware_uniform_relaxed_2/")
+setwd("~/../../outputfilename")
 file<-"simulationoutput.model.log"
 
 
