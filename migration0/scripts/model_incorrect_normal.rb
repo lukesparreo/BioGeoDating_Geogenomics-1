@@ -1,10 +1,10 @@
-### REVBAYES CODE FOR GEO-INFORMED NORMAL MODEL ###
+### REVBAYES CODE FOR GEOLOGY INCORRECT NORMAL MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_informed_normal_2/simulationoutput" #MODIFY EACH RUN!
-geo_fn = "/Users/lukesparreo/simulated_data/simulated"
-times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
+out_fn = "output_incorrect_normal1" #MODIFY EACH RUN!
+geo_fn = "simulated"
+times_fn = geo_fn + ".times.incorrect.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Read in molecular alignment
@@ -143,9 +143,6 @@ rate_bg ~ dnLoguniform(1E-4,1E2)
 rate_bg.setValue(1E-2)
 moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
 moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
-#this is in the older version of the code, do I want to use it and assign to 1?
-#fix relative anagenetic rate to 1
-#rate_bg <- 1.0
 
 # fix dispersal rate
 dispersal_rate <- 0.1
@@ -186,15 +183,16 @@ for (i in 1:n_epochs) {
                           extirpationRates=er[i],
                           maxRangeSize=max_areas)
 }
-            
-# build the epoch times
-#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
+
+#build the epoch times
+#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"
     
 # Define the means for each epoch time
-alpha <- [900, 100]   # Centers of the gamma distributions for epochs
+alpha <- [900, 400]   # Centers of the gamma distributions for epochs
+alpha <- [900, 400]   # Centers of the gamma distributions for epochs
 
 # Beta for gamma distribution
-beta <- [300, 100] # Adjust as needed
+beta <- [300, 200] # Adjust as needed
 
 # Define the epoch times using a normal prior
 for (i in 1:n_epochs) {
@@ -245,7 +243,6 @@ m_bg ~ dnPhyloCTMCClado(tree=tree,
 m_bg.clamp(dat_range_n)
 
 # Monitors
-# monitor the age of the ingroup
 ingroup_clade <- clade("n0",
                        "n1",
                        "n2")
@@ -271,13 +268,13 @@ monitors.append( mnJointConditionalAncestralState(tree=tree,
 monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           filename=out_fn+".stoch.log",
                                           printgen=100) )
-
+    
 # Analysis helper variables
 n_gen = 10000000
     
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
-
+    
 # Run
 mymcmc = mcmc(mymodel, moves, monitors)
 mymcmc.run(n_gen)
@@ -308,3 +305,4 @@ anc_tree = ancestralStateTree(tree=mcc_tree,
                                file=out_str+".ase.tre",
                                burnin=n_burn,
                                site=1)
+    
