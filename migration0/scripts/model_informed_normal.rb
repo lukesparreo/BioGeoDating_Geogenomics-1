@@ -1,11 +1,10 @@
-### REVBAYES CODE FOR GEO UNKNOWN MODEL ###
-
+### REVBAYES CODE FOR GEOLOGY INFORMED NORMAL MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_geo_unknown_2/simulationoutput" #MODIFY EACH RUN!
-geo_fn = "/Users/lukesparreo/simulated_data/unknown"
-times_fn = geo_fn + ".times.txt" #MODIFY EACH RUN!
+out_fn = "output_informed_normal2" #MODIFY EACH RUN!
+geo_fn = "simulated"
+times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
 
 # Read in molecular alignment
@@ -34,7 +33,6 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # Read the minimum and maximum ages of the barrier events
 time_bounds <- readDataDelimitedFile(file=times_fn, delimiter=" ")
 n_epochs <- time_bounds.size()
-#n_epochs <- 3
 
 # Read in connectivity matrices
 for (i in 1:n_epochs) {
@@ -140,10 +138,28 @@ m_mol.clamp(dat_mol)
 
 ### RUN THIS AS A SECOND BLOCK ###
 #Creating biogeographic model
-rate_bg <- 1.0
+rate_bg ~ dnLoguniform(1E-4,1E2)
+rate_bg.setValue(1E-2)
+moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
+moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
 
 # fix dispersal rate
 dispersal_rate <- 0.1
+distance_scale ~ dnUnif(0,20)
+distance_scale.setValue(0.001)
+moves.append( mvScale(distance_scale, weight=3) )
+
+# then, the dispersal rate matrix
+for (i in 1:n_epochs) {
+  for (j in 1:n_areas) {
+    for (k in 1:n_areas) {
+     dr[i][j][k] <- 0.0
+     if (connectivity[i][j][k] > 0) {
+       dr[i][j][k] := dispersal_rate * exp(-distance_scale * distances[j][k])
+     }
+    }
+  }
+}
             
 # extirpation rate
 log_sd <- 0.5
@@ -151,20 +167,50 @@ log_mean <- ln(1) - 0.5*log_sd^2
 extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
 moves.append( mvScale(extirpation_rate, weight=2) )
 
-# the relative dispersal and extirpation rate matrices
-for (i in 1:n_areas) {
-    for (j in 1:n_areas) {
-        er[i][j] <- 0.0
-        dr[i][j] := dispersal_rate
+for (i in 1:n_epochs) {
+  for (j in 1:n_areas) {
+    for (k in 1:n_areas) {
+      er[i][j][k] <- 0.0
     }
-    er[i][i] := extirpation_rate
+    er[i][j][j] := extirpation_rate
+  }
 }
-    
+
 # build DEC rate matrices
-Q_DEC := fnDECRateMatrix(dispersalRates=dr,
-                          extirpationRates=er,
+for (i in 1:n_epochs) {
+  Q_DEC[i] := fnDECRateMatrix(dispersalRates=dr[i],
+                          extirpationRates=er[i],
                           maxRangeSize=max_areas)
-                           
+}
+            
+# build the epoch times
+#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"
+    
+# Define the means for each epoch time
+alpha <- [900, 100]   # Centers of the gamma distributions for epochs
+alpha <- [900, 100]   # Centers of the gamma distributions for epochs
+
+# Beta for gamma distribution
+beta <- [300, 100] # Adjust as needed
+
+# Define the epoch times using a normal prior
+for (i in 1:n_epochs) {
+  time_max[i] <- time_bounds[i][1]
+  time_min[i] <- time_bounds[i][2]
+  if (i != n_epochs) {
+    epoch_times[i] ~ dnGamma(alpha[i], beta[i])
+    epoch_width = time_bounds[i][1] - time_bounds[i][2]
+    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
+  } else {
+    epoch_times[i] <- 0.0
+  }
+}
+
+print(epoch_times)
+      
+# combine the epoch rate matrices and times
+# doesn't work with dnNormal because dnNormal is domain REAL not REALPOS
+Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
 # build cladogenetic transition probabilities
 clado_event_types <- [ "s", "a" ]
@@ -185,7 +231,7 @@ rf_DEC                <- simplex(rf_DEC_raw)
     
 # the phylogenetic CTMC with cladogenetic events
 m_bg ~ dnPhyloCTMCClado(tree=tree,
-                           Q=Q_DEC,
+                           Q=Q_DEC_epoch,
                            cladoProbs=P_DEC,
                            branchRates=rate_bg,
                            rootFrequencies=rf_DEC,
@@ -195,21 +241,7 @@ m_bg ~ dnPhyloCTMCClado(tree=tree,
 # attach the range data
 m_bg.clamp(dat_range_n)
 
-# build the epoch times
-for (i in 1:n_epochs) {
-  time_max[i] <- time_bounds[i][1]
-  time_min[i] <- time_bounds[i][2]
-  if (i != n_epochs) {
-    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
-    epoch_width = time_bounds[i][1] - time_bounds[i][2]
-    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
-  } else {
-    epoch_times[i] <- 0.0
-  }
-}
-
 # Monitors
-# monitor the age of the ingroup
 ingroup_clade <- clade("n0",
                        "n1",
                        "n2")
@@ -235,18 +267,12 @@ monitors.append( mnJointConditionalAncestralState(tree=tree,
 monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           filename=out_fn+".stoch.log",
                                           printgen=100) )
+
+# Analysis helper variables
+n_gen = 10000000
+    
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
-
-# move/monitor index
-# lines hashtagged are in naive Landis silversword model
-
-#mvi = 1
-#mni = 1
-n_gen = 10000000
-#sample_freq = 50
-#under_prior = false
-#if (under_prior) out_fn = out_fn + ".under_prior"
 
 # Run
 mymcmc = mcmc(mymodel, moves, monitors)
