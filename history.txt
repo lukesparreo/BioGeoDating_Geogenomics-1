@@ -1,0 +1,100 @@
+# fix dispersal rate
+dispersal_rate <- 0.1
+            
+# extirpation rate
+log_sd <- 0.5
+log_mean <- ln(1) - 0.5*log_sd^2
+extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
+moves.append( mvScale(extirpation_rate, weight=2) )
+# the relative dispersal and extirpation rate matrices
+for (i in 1:n_areas) {
+    for (j in 1:n_areas) {
+        er[i][j] <- 0.0
+        dr[i][j] := dispersal_rate
+    }
+    er[i][i] := extirpation_rate
+}
+    
+# build DEC rate matrices
+Q_DEC := fnDECRateMatrix(dispersalRates=dr,
+                          extirpationRates=er,
+                          maxRangeSize=max_areas)
+                           
+# build cladogenetic transition probabilities
+clado_event_types <- [ "s", "a" ]
+p_sympatry ~ dnUniform(0,1)
+p_allopatry := abs(1.0 - p_sympatry)
+moves.append( mvSlide(p_sympatry, delta=0.1, weight=2) )
+clado_event_probs := simplex(p_sympatry, p_allopatry)
+# warning: P_DEC is defined, but you can't view it from print(). Instead check print(type(P_DEC)) and str(P_DEC)
+P_DEC := fnDECCladoProbs(eventProbs=clado_event_probs,
+                         eventTypes=clado_event_types,
+                         numCharacters=n_areas,
+                         maxRangeSize=max_areas)
+                       
+# root frequencies
+rf_DEC_raw            <- rep(0, n_states)
+rf_DEC_raw[n_areas+1] <- 1  # "Mainland" (original river) is the only possible starting state
+rf_DEC                <- simplex(rf_DEC_raw)
+    
+# the phylogenetic CTMC with cladogenetic events
+m_bg ~ dnPhyloCTMCClado(tree=tree,
+                           Q=Q_DEC,
+                           cladoProbs=P_DEC,
+                           branchRates=rate_bg,
+                           rootFrequencies=rf_DEC,
+                           type="NaturalNumbers",
+                           nSites=1)     
+# attach the range data
+m_bg.clamp(dat_range_n)
+# build the epoch times
+for (i in 1:n_epochs) {
+  time_max[i] <- time_bounds[i][1]
+  time_min[i] <- time_bounds[i][2]
+  if (i != n_epochs) {
+    epoch_times[i] ~ dnUniform(time_min[i], time_max[i])
+    epoch_width = time_bounds[i][1] - time_bounds[i][2]
+    moves.append( mvSlide(epoch_times[i], delta=epoch_width/2) )
+  } else {
+    epoch_times[i] <- 0.0
+  }
+}
+# Monitors
+# monitor the age of the ingroup
+ingroup_clade <- clade("n0",
+                       "n1",
+                       "n2")
+# Set ingroup age
+ingroup_age := tmrca(tree, ingroup_clade)
+for (i in 1:n_epochs) {
+    ingroup_older_island[i] := ifelse(ingroup_age > epoch_times[i], 1, 0)
+}
+monitors = VectorMonitors()
+monitors.append( mnScreen(printgen=100, ingroup_age) )
+monitors.append( mnModel(file=out_fn+".model.log", printgen=100) )
+monitors.append( mnFile(tree, filename=out_fn+".tre", printgen=100) )
+monitors.append( mnJointConditionalAncestralState(tree=tree,
+                                                  ctmc=m_bg,
+                                                  type="NaturalNumbers",
+                                                  withTips=true,
+                                                  withStartStates=true,
+                                                  filename=out_fn+".states.log",
+                                                  printgen=100) )
+monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
+                                          filename=out_fn+".stoch.log",
+                                          printgen=100) )
+# Create model
+mymodel = model(m_bg, ingroup_older_island)
+# move/monitor index
+# lines hashtagged are in naive Landis silversword model
+#mvi = 1
+#mni = 1
+n_gen = 10000000
+#sample_freq = 50
+#under_prior = false
+#if (under_prior) out_fn = out_fn + ".under_prior"
+# Run
+mymcmc = mcmc(mymodel, moves, monitors)
+mymcmc.run(n_gen)
+q()
+quit()
