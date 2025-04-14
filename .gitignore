@@ -1,2 +1,8 @@
 *.stoch.log
 .Rproj.user
+# macOS system files
+.DS_Store
+
+# RStudio files
+.Rhistory
+.Rproj.user/
