@@ -22,6 +22,7 @@ demography.add_population(name="B", initial_size=50)
 demography.add_population(name="C", initial_size=50)
 demography.add_population(name="D", initial_size=50)
 demography.add_population(name="AB", initial_size=100)
+<<<<<<< HEAD:MS/migration0/demographic_simulation.py
 demography.add_population(name="ABC", initial_size=150)
 demography.add_population(name="ABCD", initial_size=200)
 demography.add_population_split(time=2000000, derived=["A", "B"], ancestral="AB")
@@ -29,6 +30,22 @@ demography.add_population_split(time=6000000, derived=["AB", "C"], ancestral="AB
 demography.add_population_split(time=10000000, derived=["ABC", "D"], ancestral="ABCD")
 
 
+=======
+demography.add_population(name="ABC", initial_size=200)
+demography.add_population_split(time=1000000, derived=["A", "B"], ancestral="AB")
+demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="ABC")
+
+# Add constant symmetric migration between populations A and B
+#demography.set_symmetric_migration_rate(["A", "B", ""], rate=0.01)
+
+demography.add_migration_rate_change(time=500000, rate=0.2, source="A", dest="B")
+demography.add_migration_rate_change(time=500000, rate=0.2, source="B", dest="A")
+
+
+# Stop migration between A and B at 500,000 generations ago
+demography.add_migration_rate_change(time=200000, rate=0.0, source="A", dest="B")
+demography.add_migration_rate_change(time=200000, rate=0.0, source="B", dest="A")
+>>>>>>> 82869ae (Delete large .stoch.log and .model.log files to comply with GitHub size limits):migration0.2/scripts/demographic_simulation.py
 
 
 # Simulate tree sequence
