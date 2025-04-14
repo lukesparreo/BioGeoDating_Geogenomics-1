@@ -1,8 +1,8 @@
-### REVBAYES CODE FOR GEOLOGY INFORMED NORMAL MODEL ###
+### REVBAYES CODE FOR GEO-INFORMED NORMAL MODEL ###
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_informed_normal_2/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_informed_normal_migration/simulationoutput" #MODIFY EACH RUN!
 geo_fn = "simulated"
 times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
 dist_fn = geo_fn + ".distances.txt"
@@ -143,9 +143,12 @@ rate_bg ~ dnLoguniform(1E-4,1E2)
 rate_bg.setValue(1E-2)
 moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
 moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
+#this is in the older version of the code, do I want to use it and assign to 1?
+#fix relative anagenetic rate to 1
+#rate_bg <- 1.0
 
 # fix dispersal rate
-dispersal_rate <- 0.1
+dispersal_rate <- 0.2
 distance_scale ~ dnUnif(0,20)
 distance_scale.setValue(0.001)
 moves.append( mvScale(distance_scale, weight=3) )
@@ -185,10 +188,9 @@ for (i in 1:n_epochs) {
 }
             
 # build the epoch times
-#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"
+#CREATE A CUSTOM FUNCTION FOR NORMAL DIST, this ensures it is domain "RealPos"?
     
 # Define the means for each epoch time
-alpha <- [900, 100]   # Centers of the gamma distributions for epochs
 alpha <- [900, 100]   # Centers of the gamma distributions for epochs
 
 # Beta for gamma distribution
@@ -243,6 +245,7 @@ m_bg ~ dnPhyloCTMCClado(tree=tree,
 m_bg.clamp(dat_range_n)
 
 # Monitors
+# monitor the age of the ingroup
 ingroup_clade <- clade("n0",
                        "n1",
                        "n2")
@@ -284,7 +287,7 @@ mymcmc.run(n_gen)
 
 # Summarizing output
 # Go to folder of output once run is completed
-out_str = "simulationoutput" #MODIFY EACH RUN!
+out_str = "output_informed_normal_migration_2/simulationoutput" #MODIFY EACH RUN!
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
@@ -305,3 +308,4 @@ anc_tree = ancestralStateTree(tree=mcc_tree,
                                file=out_str+".ase.tre",
                                burnin=n_burn,
                                site=1)
+
