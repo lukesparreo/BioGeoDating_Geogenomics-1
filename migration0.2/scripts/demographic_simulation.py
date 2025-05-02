@@ -9,6 +9,8 @@
 import msprime
 import matplotlib.pyplot as plt
 import demesdraw
+import random
+import numpy as np
 
 # Define generation time (in years per generation)
 generation_time = 1
