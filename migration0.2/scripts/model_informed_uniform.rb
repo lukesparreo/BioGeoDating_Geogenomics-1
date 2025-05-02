@@ -1,10 +1,11 @@
-### REVBAYES CODE FOR GEO-INFORMED UNIFORM MODEL ###
+# RevBayes code for geology informed (correct) model with uniform distribution
+
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_informed_uniform_migration/simulationoutput" #MODIFY EACH RUN!
+out_fn = "output_informed_uniform1" #Modify each run if needed
 geo_fn = "simulated"
-times_fn = geo_fn + ".times.informed.txt" #MODIFY EACH RUN!
+times_fn = geo_fn + ".times.informed.txt"
 dist_fn = geo_fn + ".distances.txt"
 
 # Read in molecular alignment
@@ -18,7 +19,7 @@ n_areas <- dat_range_01.nchar()
 max_areas <- 3
 n_states <- 0
 for (k in 0:max_areas) n_states += choose(n_areas, k)
-#format
+# Format
 dat_range_n = formatDiscreteCharacterData(dat_range_01, "DEC", n_states)
 
 # Record list of ranges to a file
@@ -33,7 +34,6 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # Read the minimum and maximum ages of the barrier events
 time_bounds <- readDataDelimitedFile(file=times_fn, delimiter=" ")
 n_epochs <- time_bounds.size()
-#n_epochs <- 3
 
 # Read in connectivity matrices
 for (i in 1:n_epochs) {
@@ -52,10 +52,10 @@ taxa = tree_init.taxa()
 n_taxa = taxa.size()
 n_branches = 2 * n_taxa - 2
 
-# get the converted state descriptions
+# Get the converted state descriptions
 state_desc = dat_range_n.getStateDescriptions()
 
-# write the state descriptions to file
+# Write the state descriptions to file
 state_desc_str = "state,range\n"
 for (i in 1:state_desc.size())
 {
@@ -63,10 +63,8 @@ for (i in 1:state_desc.size())
 }
 write(state_desc_str, file=out_fn+".state_labels.txt")
 
-#Here, the model on the website has nothing, but the run_model_g1.rev adds in outgroup taxa with clade contraints. I am not doing this here because we have no outgroup 
-
 # TREE MODEL
-# Get the root age
+# Define the root age
 
 root_age ~ dnUniform(3, 4)
 
@@ -96,7 +94,7 @@ moves.append( mvTreeScale(tree, root_age, weight=n_branches/8) )
 tree.setValue(tree_init)
 root_age.setValue(tree_init.rootAge())
 
-# Creating molecular model
+# MOLECULAR MODEL
 
 # Base rate for molcular clock
 rate_mol ~ dnLoguniform(1E-6, 1E0)
@@ -137,23 +135,20 @@ m_mol ~ dnPhyloCTMC(Q=Q_mol,
 
 m_mol.clamp(dat_mol)
 
-### RUN THIS AS A SECOND BLOCK ###
-#Creating biogeographic model
+# BIOGEOGRAPHIC MODEL
+
 rate_bg ~ dnLoguniform(1E-4,1E2)
 rate_bg.setValue(1E-2)
 moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
 moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
-#this is in the older version of the code, do I want to use it and assign to 1?
-#fix relative anagenetic rate to 1
-#rate_bg <- 1.0
 
-# fix dispersal rate
+# Fix dispersal rate
 dispersal_rate <- 0.2
 distance_scale ~ dnUnif(0,20)
 distance_scale.setValue(0.001)
 moves.append( mvScale(distance_scale, weight=3) )
 
-# then, the dispersal rate matrix
+# Then, the dispersal rate matrix
 for (i in 1:n_epochs) {
   for (j in 1:n_areas) {
     for (k in 1:n_areas) {
@@ -165,7 +160,7 @@ for (i in 1:n_epochs) {
   }
 }
             
-# extirpation rate
+# Extirpation rate
 log_sd <- 0.5
 log_mean <- ln(1) - 0.5*log_sd^2
 extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
@@ -180,14 +175,14 @@ for (i in 1:n_epochs) {
   }
 }
 
-# build DEC rate matrices
+# Build DEC rate matrices
 for (i in 1:n_epochs) {
   Q_DEC[i] := fnDECRateMatrix(dispersalRates=dr[i],
                           extirpationRates=er[i],
                           maxRangeSize=max_areas)
 }
             
-# build the epoch times
+# Build the epoch times
 for (i in 1:n_epochs) {
   time_max[i] <- time_bounds[i][1]
   time_min[i] <- time_bounds[i][2]
@@ -200,27 +195,27 @@ for (i in 1:n_epochs) {
   }
 }
                            
-# combine the epoch rate matrices and times
+# Combine the epoch rate matrices and times
 Q_DEC_epoch := fnEpoch(Q=Q_DEC, times=epoch_times, rates=rep(1, n_epochs))
 
-# build cladogenetic transition probabilities
+# Build cladogenetic transition probabilities
 clado_event_types <- [ "s", "a" ]
 p_sympatry ~ dnUniform(0,1)
 p_allopatry := abs(1.0 - p_sympatry)
 moves.append( mvSlide(p_sympatry, delta=0.1, weight=2) )
 clado_event_probs := simplex(p_sympatry, p_allopatry)
-# warning: P_DEC is defined, but you can't view it from print(). Instead check print(type(P_DEC)) and str(P_DEC)
+# Note: P_DEC is defined, but you can't view it from print(). Instead check print(type(P_DEC)) and str(P_DEC)
 P_DEC := fnDECCladoProbs(eventProbs=clado_event_probs,
                          eventTypes=clado_event_types,
                          numCharacters=n_areas,
                          maxRangeSize=max_areas)
                        
-# root frequencies
+# Root frequencies
 rf_DEC_raw            <- rep(0, n_states)
 rf_DEC_raw[n_areas+1] <- 1  # "Mainland" (original river) is the only possible starting state
 rf_DEC                <- simplex(rf_DEC_raw)
     
-# the phylogenetic CTMC with cladogenetic events
+# The phylogenetic CTMC with cladogenetic events
 m_bg ~ dnPhyloCTMCClado(tree=tree,
                            Q=Q_DEC_epoch,
                            cladoProbs=P_DEC,
@@ -229,11 +224,10 @@ m_bg ~ dnPhyloCTMCClado(tree=tree,
                            type="NaturalNumbers",
                            nSites=1)     
 
-# attach the range data
+# Attach the range data
 m_bg.clamp(dat_range_n)
 
-# Monitors
-# monitor the age of the ingroup
+# Monitor the age of the ingroup
 ingroup_clade <- clade("n0",
                        "n1",
                        "n2")
@@ -260,7 +254,7 @@ monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           filename=out_fn+".stoch.log",
                                           printgen=100) )
 
-# Analysis helper variables
+# Analysis generations
 n_gen = 10000000
     
 # Create model
@@ -270,11 +264,13 @@ mymodel = model(m_bg, ingroup_older_island)
 mymcmc = mcmc(mymodel, moves, monitors)
 mymcmc.run(n_gen)
 
-# Results in /simulated_data/output
+# Results in output
+
+###
 
 # Summarizing output
 # Go to folder of output once run is completed
-out_str = "output_informed_uniform_migration/simulationoutput" #MODIFY EACH RUN!
+out_str = "simulationoutput" #May need to modify depending on output filename
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
