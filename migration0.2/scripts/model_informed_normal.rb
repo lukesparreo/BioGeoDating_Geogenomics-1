@@ -3,7 +3,7 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_informed_normal_migration/simulationoutput" #Modify each run if needed
+out_fn = "output_informed_normal1" #Modify each run if needed
 geo_fn = "simulated"
 times_fn = geo_fn + ".times.informed.txt"
 dist_fn = geo_fn + ".distances.txt"
