@@ -1,22 +1,16 @@
-###PHYLOGENY SIMULATION python
-#create ABC tree with 1mya split and 3mya split as a newick file, we will use this tree to create a "fake" biogeography divergence analysis
-#Phylogeny simulation plus sequence generation (generates for n=60, select 1 randomly from each population):
+# Phylogeny simulation without gene flow in Python
+# We will create a three-taxon demographic scenario with AB and C splitting 1 Ma and A and B splitting 3 Ma in order to generate sequences data
+# Phylogeny created from selecting taxa in the simulated dataset (generates for n=60, select 1 randomly from each population)
 
-# general setup
+# General setup:
 # conda activate msprime-env
 # python
 import msprime
 import matplotlib.pyplot as plt
 import demesdraw
-import random
-import numpy as np
 
 # Define generation time (in years per generation)
-generation_time = 1  # 25 years per generation
-
-# Convert population split times from years to generations
-split_time_1 = 1000000 // generation_time  # 1000,000 years ago
-split_time_2 = 3000000 // generation_time  # 3000,000 years ago
+generation_time = 1
 
 # Define the demographic model
 demography = msprime.Demography()
@@ -74,10 +68,6 @@ except KeyError as e:
 
 print("Population MRCAs:", pop_mrcas)
 
-# Extract divergence times for populations
-divergence_times = {pop: ts.node(mrca).time for pop, mrca in pop_mrcas.items()}
-print("Divergence times:", divergence_times)
-
 # Get population-level Newick tree
 pop_newick = tree.as_newick(root=pop_mrcas["ABC"])
 print("Population-Level Newick Tree:", pop_newick)
@@ -100,10 +90,8 @@ with open("collapsed_newick.tre", "w") as f:
 with open("simulated_sequences.nex", "w") as nexus_file:
     ts.write_nexus(nexus_file)
 
-
 # Simplify the tree sequence
 simplified_ts_single = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
-
 
 # Write the reduced dataset to another Nexus file
 with open("simulated_sequences_single.nex", "w") as nexus_file:
@@ -118,14 +106,14 @@ print("Simulated sequence data has been written to:")
 print("- Full dataset: 'simulated_sequences.nex'")
 print("- Single-individual dataset: 'simulated_sequences_single.nex'")
 
-# Reformat Nexus file to how Landis script prefers
+# Reformat Nexus file correct format for later analysis
 input_file = "simulated_sequences_single.nex"
 output_file = "modified_sequences.nex"
 
 with open(input_file, "r") as infile:
     lines = infile.readlines()
 
-# Extract the MATRIX content and remove anything after it
+# Extract the matrix content and remove anything after it
 start_writing = False
 modified_lines = ["BEGIN DATA;\n", "DIMENSIONS  NTAX=3 NCHAR=10000;\n", "FORMAT DATATYPE=DNA GAP=- MISSING=?;\n", "MATRIX\n"]
 
@@ -143,4 +131,4 @@ with open(output_file, "w") as outfile:
 
 print(f"Modified NEXUS file saved as {output_file}")
 
-#NOTE: right now you have to edit the newick tree by hand in nano; simply move the decimal place so that the tree is scaled down by a factor of a million (eg: 3.0 instead of 3,000,000)
+# NOTE: right now you have to edit the newick tree by hand using a text editor like nano; simply move the decimal place so that the tree is scaled down by a factor of a million (eg: 3.0 instead of 3,000,000)
