@@ -32,13 +32,13 @@ demography.add_population_split(time=3000000, derived=["AB", "C"], ancestral="AB
 # Add constant symmetric migration between populations A and B
 #demography.set_symmetric_migration_rate(["A", "B", ""], rate=0.01)
 
-demography.add_migration_rate_change(time=800000, rate=0.2, source="A", dest="C")
-demography.add_migration_rate_change(time=800000, rate=0.2, source="C", dest="A")
+demography.add_migration_rate_change(time=500000, rate=0.2, source="A", dest="B")
+demography.add_migration_rate_change(time=500000, rate=0.2, source="B", dest="A")
 
 
 # Stop migration between A and B at 500,000 generations ago
-demography.add_migration_rate_change(time=600000, rate=0.0, source="A", dest="B")
-demography.add_migration_rate_change(time=600000, rate=0.0, source="B", dest="A")
+demography.add_migration_rate_change(time=200000, rate=0.0, source="A", dest="B")
+demography.add_migration_rate_change(time=200000, rate=0.0, source="B", dest="A")
 
 demography.sort_events()
 
