@@ -2,8 +2,6 @@ library(RevGadgets)
 library(coda)
 library(ggplot2)
 library(ggtree)
-library(grid)
-library(gridExtra)
 
 setwd("~/../../outputfilename")
 file<-"simulationoutput.model.log"
