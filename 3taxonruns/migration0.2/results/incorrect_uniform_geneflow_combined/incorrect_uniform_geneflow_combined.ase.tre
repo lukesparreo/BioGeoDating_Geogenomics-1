@@ -1,0 +1,14 @@
+#NEXUS
+
+	Begin taxa;
+	Dimensions ntax=3;
+	Taxlabels
+		n0
+		n1
+		n2
+		;
+End;
+
+Begin trees;
+tree TREE1 = [&R]((n0[&index=3,posterior=1.000000,end_state_1=4,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=2,start_state_2=1,start_state_3=3,start_state_1_pp=0.385270,start_state_2_pp=0.292823,start_state_3_pp=0.238151,start_state_other_pp=0.083756]:1.407614,n1[&index=2,posterior=1.000000,end_state_1=4,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=2,start_state_2=1,start_state_3=3,start_state_1_pp=0.385433,start_state_2_pp=0.291830,start_state_3_pp=0.236165,start_state_other_pp=0.086572]:1.407614)[&index=4,posterior=0.899668,end_state_1=2,end_state_2=1,end_state_3=3,end_state_1_pp=0.322203,end_state_2_pp=0.240952,end_state_3_pp=0.202190,end_state_other_pp=0.234654,start_state_1=3,start_state_2=NA,start_state_3=NA,start_state_1_pp=1.000000,start_state_2_pp=0.000000,start_state_3_pp=0.000000,start_state_other_pp=0.000000]:2.100975,n2[&index=1,posterior=1.000000,end_state_1=3,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=3,start_state_2=NA,start_state_3=NA,start_state_1_pp=1.000000,start_state_2_pp=0.000000,start_state_3_pp=0.000000,start_state_other_pp=0.000000]:3.508589)[&index=5,posterior=1.000000,end_state_1=3,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=3,start_state_2=NA,start_state_3=NA,start_state_1_pp=1.000000,start_state_2_pp=0.000000,start_state_3_pp=0.000000,start_state_other_pp=0.000000]:0.000000;
+End;

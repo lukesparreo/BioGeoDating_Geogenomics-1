@@ -1,0 +1,10 @@
+out_str = "output_geo_unknown_migration0.2_combined"
+out_state_fn = out_str + ".states.log"
+out_tree_fn = out_str + ".tre"
+out_mcc_fn = out_str + ".mcc.tre"
+tree_trace = readTreeTrace(file=out_tree_fn, treetype="clock")
+tree_trace.setBurnin(0
+)
+n_burn = tree_trace.getBurnin()
+mcc_tree = mccTree(tree_trace, file=out_mcc_fn)
+q()
