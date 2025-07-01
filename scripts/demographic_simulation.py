@@ -1,6 +1,5 @@
 # Phylogeny simulation without gene flow in Python
-# We will create a three-taxon demographic scenario with AB and C splitting 1 Ma and A and B splitting 3 Ma in order to generate sequences data
-# We allow gene flow between taxa A and B between 0.5 and 0.2 Ma
+
 # Phylogeny created from selecting taxa in the simulated dataset (generates for n=60, select 1 randomly from each population)
 
 # General setup:
