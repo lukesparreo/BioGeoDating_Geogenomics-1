@@ -3,7 +3,7 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_incorrect_uniform2" #Modify each run if needed
+out_fn = "output_incorrect_uniform_migration2" #Modify each run if needed
 geo_fn = "simulated"
 times_fn = geo_fn + ".times.incorrect.txt"
 dist_fn = geo_fn + ".distances.txt"
@@ -16,7 +16,7 @@ dat_range_01 = readDiscreteCharacterData(range_fn)
 
 # Compute the number of ranges when ranges may only be one or two areas in size
 n_areas <- dat_range_01.nchar()
-max_areas <- 4
+max_areas <- 3
 n_states <- 0
 for (k in 0:max_areas) n_states += choose(n_areas, k)
 # Format
@@ -66,7 +66,7 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # TREE MODEL
 # Define the root age
 
-root_age ~ dnUniform(9.5, 10.5)
+root_age ~ dnUniform(0, 10.5)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
@@ -143,7 +143,7 @@ moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
 moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
 
 # Fix dispersal rate
-dispersal_rate <- 0.05
+dispersal_rate <- 0.2
 distance_scale ~ dnUnif(0,20)
 distance_scale.setValue(0.001)
 moves.append( mvScale(distance_scale, weight=3) )
@@ -257,7 +257,7 @@ monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           printgen=100) )
     
 # Analysis generations
-n_gen = 10000000
+n_gen = 3000000
     
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
@@ -272,7 +272,7 @@ mymcmc.run(n_gen)
 
 # Summarizing output
 # Go to folder of output once run is completed
-out_str = "output_incorrect_uniform2" #May need to modify depending on output filename
+out_str = "output_incorrect_uniform_migration2" #May need to modify depending on output filename
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
