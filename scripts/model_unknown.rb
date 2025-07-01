@@ -3,7 +3,7 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
-out_fn = "output_geo_unknown2" #Modify each run if needed
+out_fn = "output_geo_unknown_migration2" #Modify each run if needed
 geo_fn = "unknown"
 times_fn = geo_fn + ".times.txt"
 dist_fn = geo_fn + ".distances.txt"
@@ -16,7 +16,7 @@ dat_range_01 = readDiscreteCharacterData(range_fn)
 
 # Compute the number of ranges when ranges may only be one or two areas in size
 n_areas <- dat_range_01.nchar()
-max_areas <- 4
+max_areas <- 3
 n_states <- 0
 for (k in 0:max_areas) n_states += choose(n_areas, k)
 # Format
@@ -66,7 +66,7 @@ write(state_desc_str, file=out_fn+".state_labels.txt")
 # TREE MODEL
 # Define the root age
 
-root_age ~ dnUniform(9.5, 10.5)
+root_age ~ dnUniform(0, 10.5)
 
 moves = VectorMoves()
 moves.append( mvScale(root_age, weight=5) )
@@ -139,16 +139,16 @@ m_mol.clamp(dat_mol)
 # Note: the model is simpler in the unknown script than in other analyses
 rate_bg <- 1.0
 
-# fix dispersal rate
-dispersal_rate <- 0.05
+# Fix dispersal rate
+dispersal_rate <- 0.2
             
-# extirpation rate
+# Extirpation rate
 log_sd <- 0.5
 log_mean <- ln(1) - 0.5*log_sd^2
 extirpation_rate ~ dnLognormal(mean=log_mean, sd=log_sd)
 moves.append( mvScale(extirpation_rate, weight=2) )
 
-# the relative dispersal and extirpation rate matrices
+# The relative dispersal and extirpation rate matrices
 for (i in 1:n_areas) {
     for (j in 1:n_areas) {
         er[i][j] <- 0.0
@@ -157,13 +157,13 @@ for (i in 1:n_areas) {
     er[i][i] := extirpation_rate
 }
     
-# build DEC rate matrices
+# Build DEC rate matrices
 Q_DEC := fnDECRateMatrix(dispersalRates=dr,
                           extirpationRates=er,
                           maxRangeSize=max_areas)
                            
 
-# build cladogenetic transition probabilities
+# Build cladogenetic transition probabilities
 clado_event_types <- [ "s", "a" ]
 p_sympatry ~ dnUniform(0,1)
 p_allopatry := abs(1.0 - p_sympatry)
@@ -232,7 +232,7 @@ monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           filename=out_fn+".stoch.log",
                                           printgen=100) )
 # Analysis generations
-n_gen = 10000000
+n_gen = 3000000
 
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
@@ -247,7 +247,7 @@ mymcmc.run(n_gen)
 
 # Summarizing output
 # Go to folder of output once run is completed
-out_str = "output_geo_unknown2" #May need to modify depending on output filename
+out_str = "output_geo_unknown_migration2" #May need to modify depending on output filename
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
