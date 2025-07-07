@@ -6,3 +6,4 @@
 # RStudio files
 .Rhistory
 .Rproj.user/
+*.stoch.log
