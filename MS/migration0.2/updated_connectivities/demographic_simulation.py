@@ -28,6 +28,7 @@ demography.add_population_split(time=2000000, derived=["A", "B"], ancestral="AB"
 demography.add_population_split(time=6000000, derived=["AB", "C"], ancestral="ABC")
 demography.add_population_split(time=10000000, derived=["ABC", "D"], ancestral="ABCD")
 
+<<<<<<< HEAD:MS/migration0.2/updated_connectivities/demographic_simulation.py
 
 # Simulating gene flow
 demography.add_migration_rate_change(time=1000000, rate=0.2, source="A", dest="B")
@@ -37,6 +38,15 @@ demography.add_migration_rate_change(time=1000000, rate=0.2, source="B", dest="A
 demography.add_migration_rate_change(time=500000, rate=0.0, source="A", dest="B")
 demography.add_migration_rate_change(time=500000, rate=0.0, source="B", dest="A")
 
+=======
+# Simulating gene flow
+demography.add_migration_rate_change(time=500000, rate=0.2, source="A", dest="B")
+demography.add_migration_rate_change(time=500000, rate=0.2, source="B", dest="A")
+
+# Stop migration between A and B at 500,000 generations ago
+demography.add_migration_rate_change(time=200000, rate=0.0, source="A", dest="B")
+demography.add_migration_rate_change(time=200000, rate=0.0, source="B", dest="A")
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0.2/scripts/demographic_simulation.py
 
 demography.sort_events()
 
@@ -111,7 +121,11 @@ with open("simulated_sequences.nex", "w") as nexus_file:
     ts.write_nexus(nexus_file)
 
 ## Simplify the tree sequence
+<<<<<<< HEAD:MS/migration0.2/updated_connectivities/demographic_simulation.py
 simplified_ts_single = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"], pop_mrcas["D"]], keep_input_roots=True)
+=======
+simplified_ts_single = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0.2/scripts/demographic_simulation.py
 
 # Write the reduced dataset to another Nexus file
 with open("simulated_sequences_single.nex", "w") as nexus_file:

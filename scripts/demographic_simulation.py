@@ -1,7 +1,13 @@
 # Phylogeny simulation without gene flow in Python
+<<<<<<< HEAD:scripts/demographic_simulation.py
 
 # Phylogeny created from selecting taxa in the simulated dataset (generates for n=60, select 1 randomly from each population)
 
+=======
+# We will create a three-taxon demographic scenario with AB and C splitting 1 Ma and A and B splitting 3 Ma in order to generate sequences data
+# Phylogeny created from selecting taxa in the simulated dataset (generates for n=60, select 1 randomly from each population)
+
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0/scripts/demographic_simulation.py
 # General setup:
 # conda activate msprime-env
 # python
@@ -100,8 +106,13 @@ with open("collapsed_newick.tre", "w") as f:
 with open("simulated_sequences.nex", "w") as nexus_file:
     ts.write_nexus(nexus_file)
 
+<<<<<<< HEAD:scripts/demographic_simulation.py
 ## Simplify the tree sequence
 simplified_ts_single = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"], pop_mrcas["D"]], keep_input_roots=True)
+=======
+# Simplify the tree sequence
+simplified_ts_single = ts.simplify(samples=[pop_mrcas["A"], pop_mrcas["B"], pop_mrcas["C"]], keep_input_roots=True)
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0/scripts/demographic_simulation.py
 
 # Write the reduced dataset to another Nexus file
 with open("simulated_sequences_single.nex", "w") as nexus_file:
@@ -142,4 +153,7 @@ with open(output_file, "w") as outfile:
 print(f"Modified NEXUS file saved as {output_file}")
 
 # NOTE: right now you have to edit the newick tree by hand using a text editor like nano; simply move the decimal place so that the tree is scaled down by a factor of a million (eg: 3.0 instead of 3,000,000)
+<<<<<<< HEAD:scripts/demographic_simulation.py
 
+=======
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0/scripts/demographic_simulation.py

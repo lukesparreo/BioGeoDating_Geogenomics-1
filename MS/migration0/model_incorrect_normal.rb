@@ -3,7 +3,11 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
+<<<<<<< HEAD:MS/migration0/model_incorrect_normal.rb
 out_fn = "output_incorrect_normal2" #Modify each run if needed
+=======
+out_fn = "output_incorrect_normal1" #Modify each run if needed
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0/scripts/model_incorrect_normal.rb
 geo_fn = "simulated"
 times_fn = geo_fn + ".times.incorrect.txt"
 dist_fn = geo_fn + ".distances.txt"
@@ -143,7 +147,11 @@ moves.append( mvScale(rate_bg, lambda=0.2, weight=4) )
 moves.append( mvScale(rate_bg, lambda=1.0, weight=2) )
 
 # Fix dispersal rate
+<<<<<<< HEAD:MS/migration0/model_incorrect_normal.rb
 dispersal_rate <- 0.05
+=======
+dispersal_rate <- 0.1
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0/scripts/model_incorrect_normal.rb
 distance_scale ~ dnUnif(0,20)
 distance_scale.setValue(0.001)
 moves.append( mvScale(distance_scale, weight=3) )
@@ -284,7 +292,11 @@ mymcmc.run(n_gen)
 
 # Summarizing output
 # Go to folder of output once run is completed
+<<<<<<< HEAD:MS/migration0/model_incorrect_normal.rb
 out_str = "output_incorrect_normal2" #May need to modify depending on output filename
+=======
+out_str = "simulationoutput" #May need to modify depending on output filename
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0/scripts/model_incorrect_normal.rb
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"

@@ -25,4 +25,8 @@ repository-code: >-
 keywords:
   - Biogeography
   - Dating
+<<<<<<< HEAD
   - Geology
+=======
+  - Geology
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9

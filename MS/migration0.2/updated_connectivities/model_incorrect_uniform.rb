@@ -3,7 +3,11 @@
 range_fn = "simulated_range.nex"
 mol_fn = "modified_sequences_filled.nex"
 tree_fn = "collapsed_newick.tre"
+<<<<<<< HEAD:MS/migration0.2/updated_connectivities/model_incorrect_uniform.rb
 out_fn = "output_incorrect_uniform_migration2" #Modify each run if needed
+=======
+out_fn = "output_incorrect_uniform1" #Modify each run if needed
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0.2/scripts/model_incorrect_uniform.rb
 geo_fn = "simulated"
 times_fn = geo_fn + ".times.incorrect.txt"
 dist_fn = geo_fn + ".distances.txt"
@@ -257,7 +261,11 @@ monitors.append( mnStochasticCharacterMap(ctmc=m_bg,
                                           printgen=100) )
     
 # Analysis generations
+<<<<<<< HEAD:MS/migration0.2/updated_connectivities/model_incorrect_uniform.rb
 n_gen = 3000000
+=======
+n_gen = 10000000
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0.2/scripts/model_incorrect_uniform.rb
     
 # Create model
 mymodel = model(m_bg, ingroup_older_island)
@@ -272,7 +280,11 @@ mymcmc.run(n_gen)
 
 # Summarizing output
 # Go to folder of output once run is completed
+<<<<<<< HEAD:MS/migration0.2/updated_connectivities/model_incorrect_uniform.rb
 out_str = "output_incorrect_uniform_migration2" #May need to modify depending on output filename
+=======
+out_str = "simulationoutput" #May need to modify depending on output filename
+>>>>>>> 93c73ef93240767487d2735d4806add882a1c1d9:migration0.2/scripts/model_incorrect_uniform.rb
 out_state_fn = out_str + ".states.log"
 out_tree_fn = out_str + ".tre"
 out_mcc_fn = out_str + ".mcc.tre"
