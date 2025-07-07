@@ -1,0 +1,15 @@
+#NEXUS
+
+	Begin taxa;
+	Dimensions ntax=4;
+	Taxlabels
+		n0
+		n1
+		n2
+		n3
+		;
+End;
+
+Begin trees;
+tree TREE1 = [&R](((n0[&index=2,height_0.95_HPD={NA},posterior=1.000000,end_state_1=1,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=1,start_state_2=2,start_state_3=4,start_state_1_pp=0.402890,start_state_2_pp=0.257100,start_state_3_pp=0.210514,start_state_other_pp=0.129495]:2.935159,n1[&index=1,height_0.95_HPD={NA},posterior=1.000000,end_state_1=2,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=2,start_state_2=1,start_state_3=4,start_state_1_pp=0.403340,start_state_2_pp=0.254310,start_state_3_pp=0.209974,start_state_other_pp=0.132376]:2.935159)[&index=5,height_0.95_HPD={0.342525,6.10846},posterior=0.987378,end_state_1=2,end_state_2=1,end_state_3=4,end_state_1_pp=0.244723,end_state_2_pp=0.242202,end_state_3_pp=0.182338,end_state_other_pp=0.330738,start_state_1=4,start_state_2=3,start_state_3=2,start_state_1_pp=0.538055,start_state_2_pp=0.147027,start_state_3_pp=0.127828,start_state_other_pp=0.187090]:2.729908,n2[&index=3,height_0.95_HPD={NA},posterior=1.000000,end_state_1=3,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=4,start_state_2=3,start_state_3=2,start_state_1_pp=0.544128,start_state_2_pp=0.193653,start_state_3_pp=0.103928,start_state_other_pp=0.158292]:5.665067)[&index=6,height_0.95_HPD={2.12645,9.25754},posterior=0.453713,end_state_1=4,end_state_2=3,end_state_3=2,end_state_1_pp=0.503673,end_state_2_pp=0.132432,end_state_3_pp=0.090410,end_state_other_pp=0.273484,start_state_1=4,start_state_2=NA,start_state_3=NA,start_state_1_pp=1.000000,start_state_2_pp=0.000000,start_state_3_pp=0.000000,start_state_other_pp=0.000000]:2.177901,n3[&index=4,height_0.95_HPD={NA},posterior=1.000000,end_state_1=4,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=4,start_state_2=NA,start_state_3=NA,start_state_1_pp=1.000000,start_state_2_pp=0.000000,start_state_3_pp=0.000000,start_state_other_pp=0.000000]:7.842968)[&index=7,height_0.95_HPD={4.41404,10.5},posterior=1.000000,end_state_1=4,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=4,start_state_2=NA,start_state_3=NA,start_state_1_pp=1.000000,start_state_2_pp=0.000000,start_state_3_pp=0.000000,start_state_other_pp=0.000000]:0.000000;
+End;

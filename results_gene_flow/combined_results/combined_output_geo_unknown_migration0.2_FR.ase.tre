@@ -1,0 +1,15 @@
+#NEXUS
+
+	Begin taxa;
+	Dimensions ntax=4;
+	Taxlabels
+		n0
+		n1
+		n2
+		n3
+		;
+End;
+
+Begin trees;
+tree TREE1 = [&R](((n0[&index=1,posterior=1.000000,end_state_1=1,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=1,start_state_2=2,start_state_3=4,start_state_1_pp=0.397196,start_state_2_pp=0.246818,start_state_3_pp=0.116822,start_state_other_pp=0.239163]:2.227420,n1[&index=2,posterior=1.000000,end_state_1=2,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=2,start_state_2=1,start_state_3=4,start_state_1_pp=0.397641,start_state_2_pp=0.245438,start_state_3_pp=0.118269,start_state_other_pp=0.238652]:2.227420)[&index=5,posterior=0.998622,end_state_1=2,end_state_2=1,end_state_3=5,end_state_1_pp=0.213663,end_state_2_pp=0.212639,end_state_3_pp=0.158678,end_state_other_pp=0.415020,start_state_1=4,start_state_2=3,start_state_3=1,start_state_1_pp=0.363032,start_state_2_pp=0.178922,start_state_3_pp=0.172779,start_state_other_pp=0.285266]:4.399549,n2[&index=4,posterior=1.000000,end_state_1=3,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=4,start_state_2=3,start_state_3=1,start_state_1_pp=0.362577,start_state_2_pp=0.196806,start_state_3_pp=0.164134,start_state_other_pp=0.276483]:6.626969)[&index=6,posterior=0.488334,end_state_1=4,end_state_2=3,end_state_3=1,end_state_1_pp=0.299418,end_state_2_pp=0.132144,end_state_3_pp=0.118675,end_state_other_pp=0.449763,start_state_1=4,start_state_2=NA,start_state_3=NA,start_state_1_pp=1.000000,start_state_2_pp=0.000000,start_state_3_pp=0.000000,start_state_other_pp=0.000000]:3.373452,n3[&index=3,posterior=1.000000,end_state_1=4,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=4,start_state_2=NA,start_state_3=NA,start_state_1_pp=1.000000,start_state_2_pp=0.000000,start_state_3_pp=0.000000,start_state_other_pp=0.000000]:10.000421)[&index=7,posterior=1.000000,end_state_1=4,end_state_2=NA,end_state_3=NA,end_state_1_pp=1.000000,end_state_2_pp=0.000000,end_state_3_pp=0.000000,end_state_other_pp=0.000000,start_state_1=4,start_state_2=NA,start_state_3=NA,start_state_1_pp=1.000000,start_state_2_pp=0.000000,start_state_3_pp=0.000000,start_state_other_pp=0.000000]:0.000000;
+End;
